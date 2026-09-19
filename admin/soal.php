@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 // Proteksi admin
@@ -10,6 +12,10 @@ if (!isset($_SESSION['admin_id'])) {
 
 $error = '';
 $success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    validateCsrfToken();
+}
 
 // Download template CSV
 if (isset($_GET['action']) && $_GET['action'] === 'template') {
@@ -53,7 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }
             }
         } catch (PDOException $e) {
-            $error = 'Gagal menambah soal: ' . $e->getMessage();
+            error_log('Gagal menambah soal: ' . $e->getMessage());
+            $error = 'Gagal menambah soal. Silakan coba lagi.';
         }
     } else {
         $error = 'Semua field harus diisi.';
@@ -84,7 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }
             }
         } catch (PDOException $e) {
-            $error = 'Gagal menghapus soal: ' . $e->getMessage();
+            error_log('Gagal menghapus soal: ' . $e->getMessage());
+            $error = 'Gagal menghapus soal. Silakan coba lagi.';
         }
     } else {
         $error = 'Data hapus tidak valid.';
@@ -154,7 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $success = 'Import selesai. Berhasil: ' . $imported . ', dilewati: ' . $skipped . '.';
         } catch (Exception $ex) {
             if ($pdo->inTransaction()) { $pdo->rollBack(); }
-            $error = 'Gagal import: ' . $ex->getMessage();
+            error_log('Gagal import: ' . $ex->getMessage());
+            $error = 'Gagal import. Silakan coba lagi.';
         }
     }
 }
@@ -186,7 +195,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }
             }
         } catch (PDOException $e) {
-            $error = 'Gagal memperbarui soal: ' . $e->getMessage();
+            error_log('Gagal memperbarui soal: ' . $e->getMessage());
+            $error = 'Gagal memperbarui soal. Silakan coba lagi.';
         }
     } else {
         $error = 'Data edit tidak valid.';
@@ -267,6 +277,7 @@ try {
                     <div class="card-header"><i class="fas fa-plus me-2"></i>Tambah Soal</div>
                     <div class="card-body">
                         <form method="POST">
+                            <?php echo getCsrfInput(); ?>
                             <input type="hidden" name="action" value="add">
                             <div class="row">
                                 <div class="col-md-3">
@@ -303,6 +314,7 @@ try {
                         <div class="mt-3">
                             <h6><i class="fas fa-file-import me-2"></i>Import Soal (CSV)</h6>
                             <form method="POST" enctype="multipart/form-data" class="row g-2 align-items-end">
+                                <?php echo getCsrfInput(); ?>
                                 <input type="hidden" name="action" value="import">
                                 <div class="col-md-3">
                                     <label class="form-label">Jenis</label>
@@ -351,6 +363,7 @@ try {
                                                     <button class="accordion-button collapsed d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#psb-<?php echo $idx; ?>">
                                                         <span>Soal No. <?php echo $s['no_soal']; ?></span>
                                                         <form method="POST" onsubmit="return confirm('Hapus Soal Penyisihan No. <?php echo $s['no_soal']; ?>?');">
+                                                            <?php echo getCsrfInput(); ?>
                                                             <input type="hidden" name="action" value="delete">
                                                             <input type="hidden" name="jenis_del" value="penyisihan">
                                                             <input type="hidden" name="no_soal_del" value="<?php echo $s['no_soal']; ?>">
@@ -361,6 +374,7 @@ try {
                                                 <div id="psb-<?php echo $idx; ?>" class="accordion-collapse collapse" data-bs-parent="#accPenyisihan">
                                                     <div class="accordion-body">
                                                         <form method="POST" class="mb-3">
+                                                            <?php echo getCsrfInput(); ?>
                                                             <input type="hidden" name="action" value="edit">
                                                             <input type="hidden" name="jenis_edit" value="penyisihan">
                                                             <input type="hidden" name="no_soal_edit" value="<?php echo $s['no_soal']; ?>">
@@ -397,6 +411,7 @@ try {
                                                     <button class="accordion-button collapsed d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#fnb-<?php echo $idx; ?>">
                                                         <span>Soal No. <?php echo $s['no_soal']; ?></span>
                                                         <form method="POST" onsubmit="return confirm('Hapus Soal Final No. <?php echo $s['no_soal']; ?>?');">
+                                                            <?php echo getCsrfInput(); ?>
                                                             <input type="hidden" name="action" value="delete">
                                                             <input type="hidden" name="jenis_del" value="final">
                                                             <input type="hidden" name="no_soal_del" value="<?php echo $s['no_soal']; ?>">
@@ -407,6 +422,7 @@ try {
                                                 <div id="fnb-<?php echo $idx; ?>" class="accordion-collapse collapse" data-bs-parent="#accFinal">
                                                     <div class="accordion-body">
                                                         <form method="POST" class="mb-3">
+                                                            <?php echo getCsrfInput(); ?>
                                                             <input type="hidden" name="action" value="edit">
                                                             <input type="hidden" name="jenis_edit" value="final">
                                                             <input type="hidden" name="no_soal_edit" value="<?php echo $s['no_soal']; ?>">

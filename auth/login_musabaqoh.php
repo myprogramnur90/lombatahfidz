@@ -1,10 +1,14 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 $error = '';
 
 if ($_POST) {
+    validateCsrfToken();
+    checkRateLimit('musabaqoh');
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     
@@ -13,13 +17,16 @@ if ($_POST) {
     $stmt->execute([$username]);
     $user = $stmt->fetch();
     
-    if ($user && $user['password'] === MD5($password)) {
+    if ($user && password_verify($password, $user['password'])) {
+        session_regenerate_id(true);
+        resetRateLimit('musabaqoh');
         $_SESSION['musabaqoh_logged_in'] = true;
         $_SESSION['musabaqoh_user'] = $user['username'];
         $_SESSION['musabaqoh_nama'] = $user['nama_lengkap'];
         header('Location: ../musabaqoh/pilih_jenis.php');
         exit();
     } else {
+        incrementRateLimit('musabaqoh');
         $error = 'Username atau password salah!';
     }
 }
@@ -127,6 +134,7 @@ if ($_POST) {
         <?php endif; ?>
         
         <form method="POST">
+            <?php echo getCsrfInput(); ?>
             <div class="mb-3">
                 <label for="username" class="form-label">
                     <i class="fas fa-user me-2"></i>Username
@@ -158,19 +166,7 @@ if ($_POST) {
             </div>
         </form>
         
-        <div class="credentials-info">
-            <h6><i class="fas fa-info-circle me-2"></i>Kredensial Login:</h6>
-            <small>
-                <strong>Admin:</strong> admin / admin123<br>
-                <strong>Juri:</strong> juri / juri123<br>
-                <strong>Peserta:</strong> peserta / peserta123
-            </small>
-            <br><br>
-            <small class="text-muted">
-                <i class="fas fa-exclamation-triangle me-1"></i>
-                Jika login gagal, jalankan <a href="../create_musabaqoh_tables.php" target="_blank">setup database</a> terlebih dahulu.
-            </small>
-        </div>
+
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

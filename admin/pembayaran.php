@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 if (!isset($_SESSION['admin_id'])) {
@@ -9,6 +11,10 @@ if (!isset($_SESSION['admin_id'])) {
 
 $success = '';
 $error = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    validateCsrfToken();
+}
 
 // Proses update status pembayaran
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_status') {
@@ -247,6 +253,7 @@ try {
                                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                             </div>
                                                             <form method="POST">
+                                                                <?php echo getCsrfInput(); ?>
                                                                 <input type="hidden" name="action" value="update_status">
                                                                 <input type="hidden" name="pembayaran_id" value="<?php echo $pembayaran['id']; ?>">
                                                                 <div class="modal-body">
@@ -291,6 +298,7 @@ try {
                                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                             </div>
                                                             <form method="POST">
+                                                                <?php echo getCsrfInput(); ?>
                                                                 <input type="hidden" name="action" value="delete_pembayaran">
                                                                 <input type="hidden" name="pembayaran_id" value="<?php echo $pembayaran['id']; ?>">
                                                                 <div class="modal-body">

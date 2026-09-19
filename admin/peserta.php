@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 if (!isset($_SESSION['admin_id'])) {
@@ -9,6 +11,10 @@ if (!isset($_SESSION['admin_id'])) {
 
 $success = '';
 $error = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    validateCsrfToken();
+}
 
 // Proses delete peserta
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'delete') {
@@ -122,10 +128,12 @@ try {
         ) db ON p.sekolah_id = db.sekolah_id AND db.rn = 1
         $where_clause
         ORDER BY p.created_at DESC
-        LIMIT $limit OFFSET $offset
+        LIMIT ? OFFSET ?
     ";
     
     $stmt = $pdo->prepare($query);
+    $params[] = $limit;
+    $params[] = $offset;
     $stmt->execute($params);
     $peserta_list = $stmt->fetchAll();
     
@@ -291,13 +299,13 @@ try {
                                                     <td><?php echo htmlspecialchars($peserta['no_hp']); ?></td>
                                                     <td>
                                                         <span class="badge bg-<?php echo $peserta['status'] == 'Diterima' ? 'success' : ($peserta['status'] == 'Ditolak' ? 'danger' : 'warning'); ?>">
-                                                            <?php echo $peserta['status']; ?>
+                                                            <?php echo sanitizeOutput($peserta['status']); ?>
                                                         </span>
                                                     </td>
                                                     <td>
                                                         <?php if ($peserta['status_pembayaran']): ?>
                                                             <span class="badge bg-<?php echo $peserta['status_pembayaran'] == 'Lunas' ? 'success' : ($peserta['status_pembayaran'] == 'Ditolak' ? 'danger' : 'warning'); ?>">
-                                                                <?php echo $peserta['status_pembayaran']; ?>
+                                                                <?php echo sanitizeOutput($peserta['status_pembayaran']); ?>
                                                             </span>
                                                             <?php if ($peserta['nominal_pembayaran']): ?>
                                                                 <br><small class="text-muted">Rp <?php echo number_format($peserta['nominal_pembayaran']); ?></small>
@@ -309,7 +317,7 @@ try {
                                                     <td>
                                                         <?php if ($peserta['status_dokumen']): ?>
                                                             <span class="badge bg-<?php echo $peserta['status_dokumen'] == 'Diterima' ? 'success' : ($peserta['status_dokumen'] == 'Ditolak' ? 'danger' : 'warning'); ?>">
-                                                                <?php echo $peserta['status_dokumen']; ?>
+                                                                <?php echo sanitizeOutput($peserta['status_dokumen']); ?>
                                                             </span>
                                                             <?php if ($peserta['jenis_dokumen']): ?>
                                                                 <br><small class="text-muted"><?php echo $peserta['jenis_dokumen']; ?></small>
@@ -451,6 +459,7 @@ try {
                                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                             </div>
                                                             <form method="POST">
+                                                                <?php echo getCsrfInput(); ?>
                                                                 <input type="hidden" name="action" value="update_status">
                                                                 <input type="hidden" name="peserta_id" value="<?php echo $peserta['id']; ?>">
                                                                 <div class="modal-body">
@@ -500,6 +509,7 @@ try {
                                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                             </div>
                                                             <form method="POST">
+                                                                <?php echo getCsrfInput(); ?>
                                                                 <input type="hidden" name="action" value="delete">
                                                                 <input type="hidden" name="peserta_id" value="<?php echo $peserta['id']; ?>">
                                                                 <div class="modal-body">

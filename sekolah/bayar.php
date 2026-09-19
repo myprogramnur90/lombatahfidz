@@ -1,38 +1,46 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
-$sekolah_id = $_SESSION['user_id'];
+requireSekolahLogin();
+$sekolah_id = $_SESSION['sekolah_id'];
 $page_title = 'Pembayaran';
 $success = '';
 $error = '';
 
 // Proses upload bukti pembayaran
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    validateCsrfToken();
     $nominal = $_POST['nominal'];
     
     if (empty($nominal)) {
         $error = 'Nominal harus diisi!';
     } else {
-        // Upload file
-        $upload_dir = '../uploads/bukti_pembayaran/';
-        if (!file_exists($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-        
-        $file_name = $sekolah_id . '_' . time() . '_' . $_FILES['bukti_pembayaran']['name'];
-        $file_path = $upload_dir . $file_name;
-        
-        if (move_uploaded_file($_FILES['bukti_pembayaran']['tmp_name'], $file_path)) {
-            try {
-                $stmt = $pdo->prepare("INSERT INTO pembayaran (sekolah_id, nominal, bukti_pembayaran) VALUES (?, ?, ?)");
-                $stmt->execute([$sekolah_id, $nominal, $file_name]);
-                $success = 'Bukti pembayaran berhasil diupload!';
-            } catch (PDOException $e) {
-                $error = 'Terjadi kesalahan dalam menyimpan data!';
-            }
+        // Validasi file upload
+        $validation = validateFileUpload('bukti_pembayaran');
+        if (!$validation['success']) {
+            $error = $validation['error'];
         } else {
-            $error = 'Gagal mengupload file!';
+            $upload_dir = '../uploads/bukti_pembayaran/';
+            ensureUploadDir($upload_dir);
+            
+            $file_name = generateSafeFilename($sekolah_id, $validation['extension']);
+            $file_path = $upload_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['bukti_pembayaran']['tmp_name'], $file_path)) {
+                try {
+                    $stmt = $pdo->prepare("INSERT INTO pembayaran (sekolah_id, nominal, bukti_pembayaran) VALUES (?, ?, ?)");
+                    $stmt->execute([$sekolah_id, $nominal, $file_name]);
+                    $success = 'Bukti pembayaran berhasil diupload!';
+                } catch (PDOException $e) {
+                    error_log('Payment upload error: ' . $e->getMessage());
+                    $error = 'Terjadi kesalahan dalam menyimpan data!';
+                }
+            } else {
+                $error = 'Gagal mengupload file!';
+            }
         }
     }
 }
@@ -59,6 +67,7 @@ ob_start();
                                 </div>
                                 <div class="card-body">
                                     <form method="POST" enctype="multipart/form-data">
+                                        <?php echo getCsrfInput(); ?>
                                         <div class="mb-3">
                                             <label for="nominal" class="form-label">Nominal Pembayaran <span class="text-danger">*</span></label>
                                             <input type="number" class="form-control" id="nominal" name="nominal" 

@@ -1,14 +1,18 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
-$sekolah_id = $_SESSION['user_id'];
+requireSekolahLogin();
+$sekolah_id = $_SESSION['sekolah_id'];
 $page_title = 'Daftar Peserta';
 $success = '';
 $error = '';
 
 // Proses form pendaftaran
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    validateCsrfToken();
     $nama_lengkap = trim($_POST['nama_lengkap']);
     $nisn = trim($_POST['nisn']);
     $tempat_lahir = trim($_POST['tempat_lahir']);
@@ -50,6 +54,7 @@ ob_start();
                         </div>
                         <div class="card-body">
                             <form method="POST">
+                                <?php echo getCsrfInput(); ?>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="nama_lengkap" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>

@@ -1,8 +1,11 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
-$sekolah_id = $_SESSION['user_id'];
+requireSekolahLogin();
+$sekolah_id = $_SESSION['sekolah_id'];
 $page_title = 'Dashboard';
 
 // Ambil data statistik

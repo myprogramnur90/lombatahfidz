@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 if (!isset($_SESSION['admin_id'])) {
@@ -11,6 +13,9 @@ $success = '';
 $error = '';
 
 // Proses update password
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    validateCsrfToken();
+}
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_password') {
     $current_password = $_POST['current_password'];
     $new_password = $_POST['new_password'];
@@ -29,9 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             $stmt->execute([$_SESSION['admin_id']]);
             $admin = $stmt->fetch();
             
-            if (md5($current_password) === $admin['password']) {
+            if (password_verify($current_password, $admin['password'])) {
                 // Update password baru
-                $new_password_hash = md5($new_password);
+                $new_password_hash = password_hash($new_password, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare("UPDATE admin SET password = ? WHERE id = ?");
                 $stmt->execute([$new_password_hash, $_SESSION['admin_id']]);
                 $success = 'Password berhasil diupdate!';

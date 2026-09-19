@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 // Cek apakah user sudah login sebagai juri
@@ -19,6 +21,7 @@ $stmt_juri->execute([$juri_id]);
 $juri = $stmt_juri->fetch();
 
 if ($_POST) {
+    validateCsrfToken();
     $nama_lengkap = $_POST['nama_lengkap'];
     $email = $_POST['email'];
     $no_hp = $_POST['no_hp'];
@@ -49,7 +52,7 @@ if (isset($_POST['change_password'])) {
     $confirm_password = $_POST['confirm_password'];
     
     // Verifikasi password lama
-    if (md5($old_password) !== $juri['password']) {
+    if (!password_verify($old_password, $juri['password'])) {
         $error = 'Password lama salah!';
     } elseif ($new_password !== $confirm_password) {
         $error = 'Password baru dan konfirmasi password tidak sama!';
@@ -57,10 +60,11 @@ if (isset($_POST['change_password'])) {
         $error = 'Password baru minimal 6 karakter!';
     } else {
         // Update password
-        $query_password = "UPDATE juri SET password = MD5(?) WHERE id = ?";
+        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+        $query_password = "UPDATE juri SET password = ? WHERE id = ?";
         $stmt_password = $pdo->prepare($query_password);
         
-        if ($stmt_password->execute([$new_password, $juri_id])) {
+        if ($stmt_password->execute([$hashed_password, $juri_id])) {
             $success = 'Password berhasil diubah!';
         } else {
             $error = 'Gagal mengubah password!';

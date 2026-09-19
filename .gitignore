@@ -1,0 +1,30 @@
+# Environment & Credentials
+.env
+*.env
+
+# Upload files
+uploads/bukti_pembayaran/*
+uploads/dokumen_berka/*
+!uploads/bukti_pembayaran/.gitkeep
+!uploads/dokumen_berka/.gitkeep
+!uploads/.htaccess
+
+# Log files
+*.log
+error_log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.bak

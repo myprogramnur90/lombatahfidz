@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once 'config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once 'config/database.php';
 
 // Jika sudah login, redirect ke dashboard sesuai role
@@ -19,6 +21,16 @@ if (isset($_SESSION['admin_id'])) {
 
 // Handler login terpusat
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($_POST['password'])) {
+    validateCsrfToken();
+    
+    // Rate limiting
+    $rateLimitMsg = checkRateLimit('index_login');
+    if ($rateLimitMsg) {
+        $_SESSION['error'] = $rateLimitMsg;
+        header('Location: index.php');
+        exit();
+    }
+    
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
     
@@ -32,7 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
             $stmt = $pdo->prepare("SELECT * FROM admin WHERE username = ?");
             $stmt->execute([$username]);
             $admin = $stmt->fetch();
-            if ($admin && md5($password) === $admin['password']) {
+            if ($admin && password_verify($password, $admin['password'])) {
+                session_regenerate_id(true);
+                resetRateLimit('index_login');
                 $_SESSION['admin_id'] = $admin['id'];
                 $_SESSION['admin_username'] = $admin['username'];
                 $_SESSION['admin_nama'] = $admin['nama_lengkap'];
@@ -45,7 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
             $stmt = $pdo->prepare("SELECT * FROM juri WHERE username = ? AND status = 'Aktif'");
             $stmt->execute([$username]);
             $juri = $stmt->fetch();
-            if ($juri && md5($password) === $juri['password']) {
+            if ($juri && password_verify($password, $juri['password'])) {
+                session_regenerate_id(true);
+                resetRateLimit('index_login');
                 $_SESSION['juri_id'] = $juri['id'];
                 $_SESSION['juri_nama'] = $juri['nama_lengkap'];
                 $_SESSION['juri_username'] = $juri['username'];
@@ -57,7 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
             $stmt = $pdo->prepare("SELECT * FROM user_musabaqoh WHERE username = ? AND status = 'Aktif'");
             $stmt->execute([$username]);
             $userMusabaqoh = $stmt->fetch();
-            if ($userMusabaqoh && md5($password) === $userMusabaqoh['password']) {
+            if ($userMusabaqoh && password_verify($password, $userMusabaqoh['password'])) {
+                session_regenerate_id(true);
+                resetRateLimit('index_login');
                 $_SESSION['musabaqoh_logged_in'] = true;
                 $_SESSION['musabaqoh_user'] = $userMusabaqoh['username'];
                 $_SESSION['musabaqoh_nama'] = $userMusabaqoh['nama_lengkap'];
@@ -70,6 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
             $stmt->execute([$username]);
             $sekolah = $stmt->fetch();
             if ($sekolah && password_verify($password, $sekolah['password'])) {
+                session_regenerate_id(true);
+                resetRateLimit('index_login');
                 $_SESSION['sekolah_id'] = $sekolah['id'];
                 $_SESSION['sekolah_username'] = $sekolah['username'];
                 $_SESSION['sekolah_nama'] = $sekolah['nama_sekolah'];
@@ -185,6 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
                             <?php endif; ?>
                             
                             <form action="index.php" method="POST">
+                                <?php echo getCsrfInput(); ?>
                                 <div class="mb-4">
                                     <label for="username" class="form-label fw-bold text-muted">Username</label>
                                     <div class="input-group">

@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 // Cek apakah user sudah login sebagai admin
@@ -12,7 +14,8 @@ $success = '';
 $error = '';
 
 // Handle form submission
-if ($_POST) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    validateCsrfToken();
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
             $nama_lengkap = $_POST['nama_lengkap'];
@@ -30,10 +33,11 @@ if ($_POST) {
             if ($stmt_cek->fetch()) {
                 $error = 'Username sudah digunakan!';
             } else {
-                $query_insert = "INSERT INTO juri (nama_lengkap, username, password, email, no_hp, spesialisasi) VALUES (?, ?, MD5(?), ?, ?, ?)";
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $query_insert = "INSERT INTO juri (nama_lengkap, username, password, email, no_hp, spesialisasi) VALUES (?, ?, ?, ?, ?, ?)";
                 $stmt_insert = $pdo->prepare($query_insert);
                 
-                if ($stmt_insert->execute([$nama_lengkap, $username, $password, $email, $no_hp, $spesialisasi])) {
+                if ($stmt_insert->execute([$nama_lengkap, $username, $hashed_password, $email, $no_hp, $spesialisasi])) {
                     $success = 'Data juri berhasil ditambahkan!';
                 } else {
                     $error = 'Gagal menambahkan data juri!';
@@ -90,10 +94,11 @@ if ($_POST) {
             $id = $_POST['id'];
             $new_password = $_POST['new_password'];
             
-            $query_reset = "UPDATE juri SET password = MD5(?) WHERE id = ?";
+            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+            $query_reset = "UPDATE juri SET password = ? WHERE id = ?";
             $stmt_reset = $pdo->prepare($query_reset);
             
-            if ($stmt_reset->execute([$new_password, $id])) {
+            if ($stmt_reset->execute([$hashed_password, $id])) {
                 $success = 'Password juri berhasil direset!';
             } else {
                 $error = 'Gagal mereset password!';
@@ -342,6 +347,7 @@ $juri_list = $result_juri->fetchAll();
         <div class="modal-dialog">
             <div class="modal-content">
                 <form method="POST">
+                    <?php echo getCsrfInput(); ?>
                     <input type="hidden" name="action" value="add">
                     <div class="modal-header">
                         <h5 class="modal-title">
@@ -394,6 +400,7 @@ $juri_list = $result_juri->fetchAll();
         <div class="modal-dialog">
             <div class="modal-content">
                 <form method="POST">
+                    <?php echo getCsrfInput(); ?>
                     <input type="hidden" name="action" value="edit">
                     <input type="hidden" name="id" id="edit_id">
                     <div class="modal-header">
@@ -450,6 +457,7 @@ $juri_list = $result_juri->fetchAll();
         <div class="modal-dialog">
             <div class="modal-content">
                 <form method="POST">
+                    <?php echo getCsrfInput(); ?>
                     <input type="hidden" name="action" value="reset_password">
                     <input type="hidden" name="id" id="reset_id">
                     <div class="modal-header">
@@ -479,6 +487,7 @@ $juri_list = $result_juri->fetchAll();
         <div class="modal-dialog">
             <div class="modal-content">
                 <form method="POST">
+                    <?php echo getCsrfInput(); ?>
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="id" id="delete_id">
                     <div class="modal-header">

@@ -1,8 +1,11 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    checkRateLimit('sekolah');
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
     
@@ -20,6 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($sekolah && password_verify($password, $sekolah['password'])) {
             // Login berhasil
+            session_regenerate_id(true);
+            resetRateLimit('sekolah');
             $_SESSION['sekolah_id'] = $sekolah['id'];
             $_SESSION['sekolah_username'] = $sekolah['username'];
             $_SESSION['sekolah_nama'] = $sekolah['nama_sekolah'];
@@ -27,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Location: ../sekolah/dashboard.php');
             exit();
         } else {
+            incrementRateLimit('sekolah');
             $_SESSION['error'] = 'Username atau password salah!';
             header('Location: ../index.php');
             exit();

@@ -1,38 +1,46 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
-$sekolah_id = $_SESSION['user_id'];
+requireSekolahLogin();
+$sekolah_id = $_SESSION['sekolah_id'];
 $page_title = 'Dokumen Berka';
 $success = '';
 $error = '';
 
 // Proses upload dokumen berka
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    validateCsrfToken();
     $jenis_dokumen = $_POST['jenis_dokumen'];
     
     if (empty($jenis_dokumen)) {
         $error = 'Jenis dokumen harus dipilih!';
     } else {
-        // Upload file
-        $upload_dir = '../uploads/dokumen_berka/';
-        if (!file_exists($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-        
-        $file_name = $sekolah_id . '_' . $jenis_dokumen . '_' . time() . '_' . $_FILES['file_dokumen']['name'];
-        $file_path = $upload_dir . $file_name;
-        
-        if (move_uploaded_file($_FILES['file_dokumen']['tmp_name'], $file_path)) {
-            try {
-                $stmt = $pdo->prepare("INSERT INTO dokumen_berka (sekolah_id, jenis_dokumen, file_dokumen) VALUES (?, ?, ?)");
-                $stmt->execute([$sekolah_id, $jenis_dokumen, $file_name]);
-                $success = 'Dokumen berhasil diupload!';
-            } catch (PDOException $e) {
-                $error = 'Terjadi kesalahan dalam menyimpan data!';
-            }
+        // Validasi file upload
+        $validation = validateFileUpload('file_dokumen');
+        if (!$validation['success']) {
+            $error = $validation['error'];
         } else {
-            $error = 'Gagal mengupload file!';
+            $upload_dir = '../uploads/dokumen_berka/';
+            ensureUploadDir($upload_dir);
+            
+            $file_name = generateSafeFilename($sekolah_id, $validation['extension']);
+            $file_path = $upload_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['file_dokumen']['tmp_name'], $file_path)) {
+                try {
+                    $stmt = $pdo->prepare("INSERT INTO dokumen_berka (sekolah_id, jenis_dokumen, file_dokumen) VALUES (?, ?, ?)");
+                    $stmt->execute([$sekolah_id, $jenis_dokumen, $file_name]);
+                    $success = 'Dokumen berhasil diupload!';
+                } catch (PDOException $e) {
+                    error_log('Dokumen upload error: ' . $e->getMessage());
+                    $error = 'Terjadi kesalahan dalam menyimpan data!';
+                }
+            } else {
+                $error = 'Gagal mengupload file!';
+            }
         }
     }
 }
@@ -59,6 +67,7 @@ ob_start();
                                 </div>
                                 <div class="card-body">
                                     <form method="POST" enctype="multipart/form-data">
+                                        <?php echo getCsrfInput(); ?>
                                         <div class="mb-3">
                                             <label for="jenis_dokumen" class="form-label">Jenis Dokumen <span class="text-danger">*</span></label>
                                             <select class="form-control" id="jenis_dokumen" name="jenis_dokumen" required>
@@ -90,7 +99,7 @@ ob_start();
                                     <?php if (!empty($dokumen_berka)): ?>
                                         <?php foreach ($dokumen_berka as $dokumen): ?>
                                             <div class="border rounded p-3 mb-3">
-                                                <h6><?php echo $dokumen['jenis_dokumen']; ?></h6>
+                                                <h6><?php echo sanitizeOutput($dokumen['jenis_dokumen']); ?></h6>
                                                 <p class="mb-1">
                                                     <strong>Status:</strong> 
                                                     <span class="badge bg-<?php echo $dokumen['status_dokumen'] == 'Diterima' ? 'success' : ($dokumen['status_dokumen'] == 'Ditolak' ? 'danger' : 'warning'); ?>">

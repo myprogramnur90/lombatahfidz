@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 // Jika sudah login, redirect ke dashboard juri
@@ -11,6 +13,8 @@ if (isset($_SESSION['juri_id'])) {
 $error = '';
 
 if ($_POST) {
+    validateCsrfToken();
+    checkRateLimit('juri');
     $username = $_POST['username'];
     $password = $_POST['password'];
     
@@ -22,16 +26,20 @@ if ($_POST) {
     
     if ($juri) {
         // Verifikasi password (menggunakan MD5 untuk konsistensi dengan database)
-        if (md5($password) === $juri['password']) {
+        if (password_verify($password, $juri['password'])) {
+            session_regenerate_id(true);
+            resetRateLimit('juri');
             $_SESSION['juri_id'] = $juri['id'];
             $_SESSION['juri_nama'] = $juri['nama_lengkap'];
             $_SESSION['juri_username'] = $juri['username'];
             header('Location: ../juri/dashboard.php');
             exit();
         } else {
+            incrementRateLimit('juri');
             $error = 'Password salah!';
         }
     } else {
+        incrementRateLimit('juri');
         $error = 'Username tidak ditemukan atau akun tidak aktif!';
     }
 }
@@ -113,6 +121,7 @@ if ($_POST) {
                         <?php endif; ?>
                         
                         <form method="POST">
+                            <?php echo getCsrfInput(); ?>
                             <div class="mb-3">
                                 <label for="username" class="form-label">
                                     <i class="fas fa-user me-2"></i>Username

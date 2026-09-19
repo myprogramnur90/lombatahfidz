@@ -1,8 +1,11 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    checkRateLimit('admin');
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
     
@@ -18,8 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->execute([$username]);
         $admin = $stmt->fetch();
         
-        if ($admin && md5($password) === $admin['password']) {
+        if ($admin && password_verify($password, $admin['password'])) {
             // Login berhasil
+            session_regenerate_id(true);
+            resetRateLimit('admin');
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_username'] = $admin['username'];
             $_SESSION['admin_nama'] = $admin['nama_lengkap'];
@@ -28,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Location: ../admin/dashboard.php');
             exit();
         } else {
+            incrementRateLimit('admin');
             $_SESSION['error'] = 'Username atau password salah!';
             header('Location: ../index.php');
             exit();

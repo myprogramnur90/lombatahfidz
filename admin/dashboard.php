@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../config/database.php';
 
 if (!isset($_SESSION['admin_id'])) {
@@ -150,7 +152,7 @@ try {
                                         <ul class="list-group">
                                             <?php foreach ($soalPenyisihan as $s): ?>
                                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                    No. <?php echo $s['no_soal']; ?>
+                                                    No. <?php echo sanitizeOutput($s['no_soal']); ?>
                                                     <span class="badge bg-primary rounded-pill">3 butir</span>
                                                 </li>
                                             <?php endforeach; ?>
@@ -165,7 +167,7 @@ try {
                                         <ul class="list-group">
                                             <?php foreach ($soalFinal as $s): ?>
                                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                    No. <?php echo $s['no_soal']; ?>
+                                                    No. <?php echo sanitizeOutput($s['no_soal']); ?>
                                                     <span class="badge bg-danger rounded-pill">3 butir</span>
                                                 </li>
                                             <?php endforeach; ?>

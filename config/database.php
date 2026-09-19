@@ -11,7 +11,8 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch(PDOException $e) {
-    die("Koneksi database gagal: " . $e->getMessage());
+    error_log("Database connection failed: " . $e->getMessage()); 
+    die("Terjadi kesalahan koneksi database. Silakan hubungi administrator.");
 }
 
 // Fungsi untuk mendapatkan pengaturan sistem
