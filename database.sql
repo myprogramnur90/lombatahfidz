@@ -1,7 +1,4 @@
 -- Database untuk Sistem Manajemen Pendaftaran Lomba Tahfidz
-CREATE DATABASE IF NOT EXISTS lombatahfid;
-USE lombatahfid;
-
 -- Tabel untuk data sekolah
 CREATE TABLE sekolah (
     id INT AUTO_INCREMENT PRIMARY KEY,
