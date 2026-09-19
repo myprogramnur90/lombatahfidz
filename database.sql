@@ -1,6 +1,6 @@
 -- Database untuk Sistem Manajemen Pendaftaran Lomba Tahfidz
-CREATE DATABASE IF NOT EXISTS lomba_tahfidz;
-USE lomba_tahfidz;
+CREATE DATABASE IF NOT EXISTS lombatahfid;
+USE lombatahfid;
 
 -- Tabel untuk data sekolah
 CREATE TABLE sekolah (
@@ -78,7 +78,7 @@ CREATE TABLE admin (
 
 -- Insert admin default
 INSERT INTO admin (username, password, nama_lengkap, email) VALUES 
-('admin', MD5('admin123'), 'Administrator', 'admin@lombatahfidz.com');
+('admin', '$2y$10$192l632c5qituuf0.67G5OlIjGXkJLDqVW3defAwYPW4XqXAG795a', 'Administrator', 'admin@lombatahfidz.com');
 
 -- Tabel untuk pengaturan sistem
 CREATE TABLE pengaturan (
@@ -158,9 +158,9 @@ INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES
 
 -- Insert juri default (3 juri)
 INSERT INTO juri (nama_lengkap, username, password, email, no_hp, spesialisasi) VALUES 
-('Dr. Ahmad Al-Hafizh', 'juri1', MD5('juri123'), 'juri1@lombatahfidz.com', '081111111111', 'Makhraj'),
-('Ust. Muhammad Qari', 'juri2', MD5('juri123'), 'juri2@lombatahfidz.com', '081222222222', 'Kelancaran Hafalan'),
-('Ust. Abdullah Hafizh', 'juri3', MD5('juri123'), 'juri3@lombatahfidz.com', '081333333333', 'Tajwid dan Adab');
+('Dr. Ahmad Al-Hafizh', 'juri1', '$2y$10$RvIqqihKT1t/iiJRiLmYru4Ml8uVA5YAm84Q9fOXZgwjZIx1zB/8W', 'juri1@lombatahfidz.com', '081111111111', 'Makhraj'),
+('Ust. Muhammad Qari', 'juri2', '$2y$10$RvIqqihKT1t/iiJRiLmYru4Ml8uVA5YAm84Q9fOXZgwjZIx1zB/8W', 'juri2@lombatahfidz.com', '081222222222', 'Kelancaran Hafalan'),
+('Ust. Abdullah Hafizh', 'juri3', '$2y$10$RvIqqihKT1t/iiJRiLmYru4Ml8uVA5YAm84Q9fOXZgwjZIx1zB/8W', 'juri3@lombatahfidz.com', '081333333333', 'Tajwid dan Adab');
 
 CREATE TABLE soal_musabaqoh (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -208,9 +208,9 @@ CREATE TABLE user_musabaqoh (
 
 -- Insert user default untuk musabaqoh
 INSERT INTO user_musabaqoh (username, password, nama_lengkap) VALUES 
-('admin', MD5('admin123'), 'Admin Musabaqoh'),
-('juri', MD5('juri123'), 'Juri Musabaqoh'),
-('peserta', MD5('peserta123'), 'Peserta Musabaqoh');
+('admin', '$2y$10$192l632c5qituuf0.67G5OlIjGXkJLDqVW3defAwYPW4XqXAG795a', 'Admin Musabaqoh'),
+('juri', '$2y$10$RvIqqihKT1t/iiJRiLmYru4Ml8uVA5YAm84Q9fOXZgwjZIx1zB/8W', 'Juri Musabaqoh'),
+('peserta', '$2y$10$O.tERJleO6PTT/fRb.VqjOS49Tw.uRn60RtxMk1eF0h5NuFccK04a', 'Peserta Musabaqoh');
 
 -- Tabel untuk soal musabaqoh final
 CREATE TABLE soal_musabaqoh_final (
