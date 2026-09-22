@@ -22,6 +22,17 @@ try {
     // Abaikan jika sudah ada
 }
 
+// Pastikan pengaturan ceo ada di database
+try {
+    $cekCeo = $pdo->prepare("SELECT COUNT(*) FROM pengaturan WHERE nama_pengaturan = 'ceo'");
+    $cekCeo->execute();
+    if ($cekCeo->fetchColumn() == 0) {
+        $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('ceo', '', 'Nama CEO / Penanggung Jawab')")->execute();
+    }
+} catch (PDOException $e) {
+    // Abaikan jika sudah ada
+}
+
 // Proses update pengaturan
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nama_lomba = trim($_POST['nama_lomba']);
@@ -29,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $biaya_pendaftaran = trim($_POST['biaya_pendaftaran']);
     $kontak_panitia = trim($_POST['kontak_panitia']);
     $alamat_sekretariat = trim($_POST['alamat_sekretariat']);
+    $ceo = trim($_POST['ceo'] ?? '');
     
     try {
         // Handle upload logo
@@ -90,7 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'tanggal_penutupan' => $tanggal_penutupan,
             'biaya_pendaftaran' => $biaya_pendaftaran,
             'kontak_panitia' => $kontak_panitia,
-            'alamat_sekretariat' => $alamat_sekretariat
+            'alamat_sekretariat' => $alamat_sekretariat,
+            'ceo' => $ceo
         ];
         
         foreach ($pengaturan as $nama => $nilai) {
@@ -190,6 +203,15 @@ $logoPath = $pengaturan_data['logo_sekolah'] ?? '';
                                         <label for="kontak_panitia" class="form-label">Kontak Panitia <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="kontak_panitia" name="kontak_panitia" 
                                                value="<?php echo htmlspecialchars($pengaturan_data['kontak_panitia'] ?? ''); ?>" required>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ceo" class="form-label"><i class="fas fa-user-tie me-1"></i>CEO / Penanggung Jawab</label>
+                                        <input type="text" class="form-control" id="ceo" name="ceo" 
+                                               value="<?php echo htmlspecialchars($pengaturan_data['ceo'] ?? ''); ?>" 
+                                               placeholder="Masukkan nama CEO / Penanggung Jawab">
                                     </div>
                                 </div>
 
