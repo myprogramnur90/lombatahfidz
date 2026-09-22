@@ -77,6 +77,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
+// Cek flash message dari import
+if (isset($_SESSION['import_success'])) {
+    $success = $_SESSION['import_success'];
+    unset($_SESSION['import_success']);
+}
+if (isset($_SESSION['import_error'])) {
+    $error = $_SESSION['import_error'];
+    unset($_SESSION['import_error']);
+}
+
 // Ambil data sekolah
 try {
     $stmt = $pdo->query("SELECT * FROM sekolah ORDER BY created_at DESC");
@@ -108,11 +118,24 @@ try {
             
             <div class="col-md-9 col-lg-10">
                 <div class="p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h2><i class="fas fa-school me-2"></i>Kelola Sekolah</h2>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSekolahModal">
-                            <i class="fas fa-plus me-2"></i>Tambah Sekolah
-                        </button>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <div class="btn-group">
+                                <a href="export_sekolah.php" class="btn btn-success btn-sm" title="Export Excel">
+                                    <i class="fas fa-file-excel me-1"></i>Export Excel
+                                </a>
+                                <a href="export_sekolah_pdf.php" class="btn btn-danger btn-sm" title="Export PDF">
+                                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                                </a>
+                            </div>
+                            <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#importSekolahModal">
+                                <i class="fas fa-file-import me-1"></i>Import Excel
+                            </button>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSekolahModal">
+                                <i class="fas fa-plus me-1"></i>Tambah Sekolah
+                            </button>
+                        </div>
                     </div>
                     
                     <?php if ($success): ?>
@@ -301,6 +324,48 @@ try {
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import Sekolah -->
+    <div class="modal fade" id="importSekolahModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #00b4db, #0083b0); color: white; border: none;">
+                    <h5 class="modal-title"><i class="fas fa-file-import me-2"></i>Import Data Sekolah</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="import_sekolah.php" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="alert alert-info py-2 mb-3" style="font-size: 0.85rem;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Format kolom yang diharapkan:</strong><br>
+                            Nama Sekolah, NPSN, Alamat, No HP, Email, Nama Kepala Sekolah, Username
+                        </div>
+                        <div class="mb-3">
+                            <label for="import_file" class="form-label fw-bold">Pilih File Excel / CSV</label>
+                            <input type="file" class="form-control" id="import_file" name="file_import" accept=".xls,.xlsx,.csv" required>
+                            <small class="text-muted">Format: .xls, .xlsx, atau .csv (maks 5MB)</small>
+                        </div>
+                        <div class="alert alert-warning py-2 mb-0" style="font-size: 0.82rem;">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>Catatan:</strong>
+                            <ul class="mb-0 ps-3 mt-1">
+                                <li>Baris pertama harus berisi header kolom</li>
+                                <li>Password default: <code>123456</code></li>
+                                <li>Username yang sudah ada akan dilewati</li>
+                                <li>Bisa gunakan file hasil <strong>Export Excel</strong> sebagai template</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-info text-white">
+                            <i class="fas fa-upload me-1"></i>Import Sekarang
+                        </button>
                     </div>
                 </form>
             </div>
