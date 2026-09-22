@@ -19,224 +19,453 @@ if (isset($_SESSION['admin_id'])) {
     exit();
 }
 
-// Handler login terpusat
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($_POST['password'])) {
-    validateCsrfToken();
-    
-    // Rate limiting
-    $rateLimitMsg = checkRateLimit('index_login');
-    if ($rateLimitMsg) {
-        $_SESSION['error'] = $rateLimitMsg;
-        header('Location: index.php');
-        exit();
-    }
-    
-    $username = trim($_POST['username']);
-    $password = trim($_POST['password']);
-    
-    if (empty($username) || empty($password)) {
-        $_SESSION['error'] = 'Username dan password harus diisi!';
-    } else {
-        try {
-            $loggedIn = false;
-            
-            // 1. Cek Admin
-            $stmt = $pdo->prepare("SELECT * FROM admin WHERE username = ?");
-            $stmt->execute([$username]);
-            $admin = $stmt->fetch();
-            if ($admin && password_verify($password, $admin['password'])) {
-                session_regenerate_id(true);
-                resetRateLimit('index_login');
-                $_SESSION['admin_id'] = $admin['id'];
-                $_SESSION['admin_username'] = $admin['username'];
-                $_SESSION['admin_nama'] = $admin['nama_lengkap'];
-                $_SESSION['admin_logged_in'] = true;
-                header('Location: admin/dashboard.php');
-                exit();
-            }
+// Ambil pengaturan
+$namaLomba = getPengaturan('nama_lomba');
+$tanggalPenutupan = getPengaturan('tanggal_penutupan');
+$biayaPendaftaran = getPengaturan('biaya_pendaftaran');
+$kontakPanitia = getPengaturan('kontak_panitia');
+$alamatSekretariat = getPengaturan('alamat_sekretariat');
 
-            // 2. Cek Juri
-            $stmt = $pdo->prepare("SELECT * FROM juri WHERE username = ? AND status = 'Aktif'");
-            $stmt->execute([$username]);
-            $juri = $stmt->fetch();
-            if ($juri && password_verify($password, $juri['password'])) {
-                session_regenerate_id(true);
-                resetRateLimit('index_login');
-                $_SESSION['juri_id'] = $juri['id'];
-                $_SESSION['juri_nama'] = $juri['nama_lengkap'];
-                $_SESSION['juri_username'] = $juri['username'];
-                header('Location: juri/dashboard.php');
-                exit();
-            }
-
-            // 3. Cek Musabaqoh
-            $stmt = $pdo->prepare("SELECT * FROM user_musabaqoh WHERE username = ? AND status = 'Aktif'");
-            $stmt->execute([$username]);
-            $userMusabaqoh = $stmt->fetch();
-            if ($userMusabaqoh && password_verify($password, $userMusabaqoh['password'])) {
-                session_regenerate_id(true);
-                resetRateLimit('index_login');
-                $_SESSION['musabaqoh_logged_in'] = true;
-                $_SESSION['musabaqoh_user'] = $userMusabaqoh['username'];
-                $_SESSION['musabaqoh_nama'] = $userMusabaqoh['nama_lengkap'];
-                header('Location: musabaqoh/pilih_jenis.php');
-                exit();
-            }
-
-            // 4. Cek Sekolah
-            $stmt = $pdo->prepare("SELECT * FROM sekolah WHERE username = ? AND status = 'Aktif'");
-            $stmt->execute([$username]);
-            $sekolah = $stmt->fetch();
-            if ($sekolah && password_verify($password, $sekolah['password'])) {
-                session_regenerate_id(true);
-                resetRateLimit('index_login');
-                $_SESSION['sekolah_id'] = $sekolah['id'];
-                $_SESSION['sekolah_username'] = $sekolah['username'];
-                $_SESSION['sekolah_nama'] = $sekolah['nama_sekolah'];
-                header('Location: sekolah/dashboard.php');
-                exit();
-            }
-
-            // Jika tidak ada yang cocok
-            if (!$loggedIn) {
-                $_SESSION['error'] = 'Username atau password salah, atau akun tidak aktif!';
-            }
-        } catch (PDOException $e) {
-            $_SESSION['error'] = 'Terjadi kesalahan sistem!';
-        }
-    }
-    header('Location: index.php');
-    exit();
+// Format tanggal
+$tanggalFormatted = '';
+if ($tanggalPenutupan) {
+    $date = new DateTime($tanggalPenutupan);
+    $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    $tanggalFormatted = $date->format('d') . ' ' . $bulan[(int)$date->format('m')] . ' ' . $date->format('Y');
 }
+
+// Ambil posting publik (Published & target Umum)
+$stmtPosts = $pdo->prepare("SELECT p.*, s.nama_sekolah 
+                             FROM posts p 
+                             LEFT JOIN sekolah s ON p.sekolah_id = s.id 
+                             WHERE p.status = 'Published' 
+                             AND p.target_audience = 'Umum'
+                             ORDER BY p.created_at DESC 
+                             LIMIT 6");
+$stmtPosts->execute();
+$posts = $stmtPosts->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo getPengaturan('nama_lomba'); ?></title>
+    <title><?php echo htmlspecialchars($namaLomba); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --primary: #667eea;
+            --primary-dark: #764ba2;
+            --accent: #f093fb;
         }
-        .login-container {
-            min-height: 100vh;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .navbar-custom .navbar-brand {
+            color: white;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+        .navbar-custom .navbar-brand i {
+            margin-right: 8px;
+        }
+        .btn-nav-login {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 50px;
+            padding: 8px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-nav-login:hover {
+            background: white;
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 80px 0 100px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 50%;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        .hero-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .hero-subtitle {
+            font-size: 1.2rem;
+            font-weight: 300;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        .btn-hero {
+            background: white;
+            color: var(--primary);
+            border: none;
+            border-radius: 50px;
+            padding: 14px 40px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .btn-hero:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            color: var(--primary-dark);
+        }
+
+        /* ===== INFO CARDS ===== */
+        .info-section {
+            margin-top: -50px;
+            position: relative;
+            z-index: 10;
+            padding-bottom: 3rem;
+        }
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.04);
+            height: 100%;
+        }
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.12);
+        }
+        .info-card .info-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
         }
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .info-icon-date { background: rgba(102, 126, 234, 0.1); color: var(--primary); }
+        .info-icon-fee { background: rgba(46, 204, 113, 0.1); color: #2ecc71; }
+        .info-icon-contact { background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+        .info-card h6 {
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
         }
-        .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 20px 20px 0 0;
-            padding: 2rem;
+        .info-card .info-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* ===== POSTS SECTION ===== */
+        .posts-section {
+            padding: 3rem 0 4rem;
+            background: #f8f9ff;
+        }
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        .section-subtitle {
+            color: #888;
+            margin-bottom: 2.5rem;
+        }
+        .post-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.04);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.1);
+        }
+        .post-card-header {
+            padding: 1.5rem 1.5rem 0;
+        }
+        .post-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-pengumuman { background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+        .badge-informasi { background: rgba(52, 152, 219, 0.1); color: #3498db; }
+        .badge-persyaratan { background: rgba(46, 204, 113, 0.1); color: #2ecc71; }
+        .badge-lainnya { background: rgba(149, 165, 166, 0.1); color: #95a5a6; }
+        .post-card-body {
+            padding: 1rem 1.5rem;
+            flex-grow: 1;
+        }
+        .post-card-body h5 {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        .post-card-body h5 a {
+            color: #333;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .post-card-body h5 a:hover {
+            color: var(--primary);
+        }
+        .post-excerpt {
+            color: #777;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .post-card-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #f0f0f0;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+        .no-posts {
             text-align: center;
+            padding: 3rem;
+            color: #aaa;
         }
-        .login-body {
-            padding: 2rem;
+        .no-posts i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
         }
-        .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 12px 30px;
-            font-weight: 600;
-            transition: all 0.3s ease;
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: linear-gradient(135deg, #2d3436 0%, #000000 100%);
+            color: rgba(255,255,255,0.7);
+            padding: 2.5rem 0;
         }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        .footer a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
         }
-        .form-control {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            padding: 12px 15px;
-            transition: all 0.3s ease;
-        }
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        .login-tabs {
-            border-bottom: 2px solid #e9ecef;
-            margin-bottom: 2rem;
-        }
-        .nav-link {
-            border: none;
-            border-radius: 10px 10px 0 0;
-            margin-right: 5px;
-            font-weight: 600;
-            color: #6c757d;
-        }
-        .nav-link.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .footer a:hover {
             color: white;
+        }
+        .footer-brand {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 1.8rem; }
+            .hero-subtitle { font-size: 1rem; }
+            .hero-section { padding: 50px 0 80px; }
+            .section-title { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-6 col-lg-5">
-                    <div class="login-card">
-                        <div class="login-header">
-                            <h2><i class="fas fa-quran me-2"></i><?php echo getPengaturan('nama_lomba'); ?></h2>
-                            <p class="mb-0">Sistem Pendaftaran Online</p>
+            <a class="navbar-brand" href="index.php">
+                <i class="fas fa-quran"></i><?php echo htmlspecialchars($namaLomba); ?>
+            </a>
+            <a href="auth/login.php" class="btn btn-nav-login">
+                <i class="fas fa-sign-in-alt me-1"></i> Login
+            </a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+        <div class="container text-center">
+            <div class="hero-content">
+                <div class="hero-icon">🕌</div>
+                <h1 class="hero-title"><?php echo htmlspecialchars($namaLomba); ?></h1>
+                <p class="hero-subtitle">Sistem Pendaftaran & Penilaian Online</p>
+                <a href="auth/login.php" class="btn btn-hero">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login ke Sistem
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- INFO CARDS -->
+    <section class="info-section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="info-card">
+                        <div class="info-icon info-icon-date">
+                            <i class="fas fa-calendar-alt"></i>
                         </div>
-                        <div class="login-body">
-                            <?php if (isset($_SESSION['error'])): ?>
-                                <div class="alert alert-danger alert-dismissible fade show">
-                                    <i class="fas fa-exclamation-circle me-2"></i><?php echo $_SESSION['error']; ?>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                                <?php unset($_SESSION['error']); ?>
-                            <?php endif; ?>
-                            
-                            <form action="index.php" method="POST">
-                                <?php echo getCsrfInput(); ?>
-                                <div class="mb-4">
-                                    <label for="username" class="form-label fw-bold text-muted">Username</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light"><i class="fas fa-user text-primary"></i></span>
-                                        <input type="text" class="form-control form-control-lg bg-light" id="username" name="username" placeholder="Masukkan username" required>
-                                    </div>
-                                </div>
-                                <div class="mb-4">
-                                    <label for="password" class="form-label fw-bold text-muted">Password</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light"><i class="fas fa-lock text-primary"></i></span>
-                                        <input type="password" class="form-control form-control-lg bg-light" id="password" name="password" placeholder="Masukkan password" required>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-login w-100 btn-lg shadow-sm">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Login ke Sistem
-                                </button>
-                            </form>
-                            
-                            <div class="text-center mt-4">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Kontak Panitia: <?php echo getPengaturan('kontak_panitia'); ?>
-                                </small>
-                            </div>
+                        <h6>Batas Pendaftaran</h6>
+                        <div class="info-value"><?php echo $tanggalFormatted ?: '-'; ?></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="info-card">
+                        <div class="info-icon info-icon-fee">
+                            <i class="fas fa-money-bill-wave"></i>
                         </div>
+                        <h6>Biaya Pendaftaran</h6>
+                        <div class="info-value">Rp <?php echo number_format((int)$biayaPendaftaran, 0, ',', '.'); ?></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="info-card">
+                        <div class="info-icon info-icon-contact">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <h6>Kontak Panitia</h6>
+                        <div class="info-value"><?php echo htmlspecialchars($kontakPanitia); ?></div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <!-- POSTS / PENGUMUMAN SECTION -->
+    <section class="posts-section">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title"><i class="fas fa-bullhorn me-2" style="color: var(--primary);"></i>Pengumuman & Informasi</h2>
+                <p class="section-subtitle">Informasi terbaru seputar kegiatan lomba</p>
+            </div>
+
+            <?php if (count($posts) > 0): ?>
+                <div class="row g-4">
+                    <?php foreach ($posts as $post): ?>
+                        <?php
+                        // Badge class berdasarkan jenis post
+                        $badgeClass = 'badge-informasi';
+                        switch ($post['jenis_post']) {
+                            case 'Pengumuman': $badgeClass = 'badge-pengumuman'; break;
+                            case 'Persyaratan': $badgeClass = 'badge-persyaratan'; break;
+                            case 'Lainnya': $badgeClass = 'badge-lainnya'; break;
+                        }
+                        // Format tanggal posting
+                        $tglPost = new DateTime($post['created_at']);
+                        $tglFormatted = $tglPost->format('d') . ' ' . $bulan[(int)$tglPost->format('m')] . ' ' . $tglPost->format('Y');
+                        // Potong konten untuk excerpt
+                        $excerpt = strip_tags($post['konten']);
+                        $excerpt = strlen($excerpt) > 150 ? substr($excerpt, 0, 150) . '...' : $excerpt;
+                        ?>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="post-card">
+                                <div class="post-card-header">
+                                    <span class="post-badge <?php echo $badgeClass; ?>"><?php echo htmlspecialchars($post['jenis_post']); ?></span>
+                                </div>
+                                <div class="post-card-body">
+                                    <h5><a href="posting.php?id=<?php echo $post['id']; ?>"><?php echo htmlspecialchars($post['judul']); ?></a></h5>
+                                    <p class="post-excerpt"><?php echo htmlspecialchars($excerpt); ?></p>
+                                </div>
+                                <div class="post-card-footer">
+                                    <i class="fas fa-clock me-1"></i> <?php echo $tglFormatted; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="no-posts">
+                    <i class="fas fa-inbox"></i>
+                    <h5>Belum ada pengumuman</h5>
+                    <p>Pengumuman dan informasi terbaru akan ditampilkan di sini.</p>
+                </div>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="footer-brand"><i class="fas fa-quran me-2"></i><?php echo htmlspecialchars($namaLomba); ?></div>
+                    <small><i class="fas fa-map-marker-alt me-1"></i> <?php echo htmlspecialchars($alamatSekretariat); ?></small>
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <small>
+                        <i class="fas fa-phone-alt me-1"></i> <?php echo htmlspecialchars($kontakPanitia); ?>
+                    </small>
+                    <br>
+                    <small>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($namaLomba); ?>. All rights reserved.</small>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
