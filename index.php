@@ -210,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
                                     <label for="username" class="form-label fw-bold text-muted">Username</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light"><i class="fas fa-user text-primary"></i></span>
-                                        <input type="text" class="form-control form-control-lg bg-light" id="username" name="username" placeholder="Masukkan username" required>
+                                        <input type="text" class="form-control form-control-lg bg-light" id="username" name="username" placeholder="sayang" required>
                                     </div>
                                 </div>
                                 <div class="mb-4">
