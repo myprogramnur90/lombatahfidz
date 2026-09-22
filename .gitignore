@@ -2,6 +2,9 @@
 .env
 *.env
 
+# Database config (berisi password - jangan di-push ke GitHub!)
+config/database.php
+
 # Upload files
 uploads/bukti_pembayaran/*
 uploads/dokumen_berka/*
