@@ -25,6 +25,7 @@ $tanggalPenutupan = getPengaturan('tanggal_penutupan');
 $biayaPendaftaran = getPengaturan('biaya_pendaftaran');
 $kontakPanitia = getPengaturan('kontak_panitia');
 $alamatSekretariat = getPengaturan('alamat_sekretariat');
+$logoSekolah = getPengaturan('logo_sekolah');
 
 // Format tanggal
 $tanggalFormatted = '';
@@ -351,7 +352,13 @@ $posts = $stmtPosts->fetchAll();
     <section class="hero-section">
         <div class="container text-center">
             <div class="hero-content">
-                <div class="hero-icon">🕌</div>
+                <div class="hero-icon">
+                    <?php if ($logoSekolah && file_exists($logoSekolah)): ?>
+                        <img src="<?php echo htmlspecialchars($logoSekolah); ?>" alt="Logo" style="max-height: 120px; border-radius: 15px; background: rgba(255,255,255,0.15); padding: 10px;">
+                    <?php else: ?>
+                        🕌
+                    <?php endif; ?>
+                </div>
                 <h1 class="hero-title"><?php echo htmlspecialchars($namaLomba); ?></h1>
                 <p class="hero-subtitle">Sistem Pendaftaran & Penilaian Online</p>
                 <a href="auth/login.php" class="btn btn-hero">

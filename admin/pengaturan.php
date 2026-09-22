@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once '../config/security.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: ../auth/login_admin.php');
@@ -9,6 +10,17 @@ if (!isset($_SESSION['admin_id'])) {
 
 $success = '';
 $error = '';
+
+// Pastikan pengaturan logo_sekolah ada di database
+try {
+    $cekLogo = $pdo->prepare("SELECT COUNT(*) FROM pengaturan WHERE nama_pengaturan = 'logo_sekolah'");
+    $cekLogo->execute();
+    if ($cekLogo->fetchColumn() == 0) {
+        $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('logo_sekolah', '', 'Path file logo sekolah')")->execute();
+    }
+} catch (PDOException $e) {
+    // Abaikan jika sudah ada
+}
 
 // Proses update pengaturan
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -19,7 +31,60 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $alamat_sekretariat = trim($_POST['alamat_sekretariat']);
     
     try {
-        // Update pengaturan
+        // Handle upload logo
+        if (isset($_FILES['logo_sekolah']) && $_FILES['logo_sekolah']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = '../uploads/logo/';
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            $file = $_FILES['logo_sekolah'];
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+            $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+            $maxSize = 2 * 1024 * 1024; // 2MB
+            
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+            
+            if ($file['size'] > $maxSize) {
+                $error = 'Ukuran logo maksimal 2MB!';
+            } elseif (!in_array($ext, $allowedExts)) {
+                $error = 'Format logo harus: JPG, PNG, GIF, WEBP, atau SVG!';
+            } elseif (!in_array($mimeType, $allowedTypes) && $ext !== 'svg') {
+                $error = 'Tipe file tidak diizinkan!';
+            } else {
+                // Hapus logo lama jika ada
+                $logoLama = getPengaturan('logo_sekolah');
+                if ($logoLama && file_exists('../' . $logoLama)) {
+                    unlink('../' . $logoLama);
+                }
+                
+                $namaFile = 'logo_' . time() . '.' . $ext;
+                $targetPath = $uploadDir . $namaFile;
+                
+                if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                    // Simpan path relatif ke database
+                    $stmt = $pdo->prepare("UPDATE pengaturan SET nilai = ? WHERE nama_pengaturan = 'logo_sekolah'");
+                    $stmt->execute(['uploads/logo/' . $namaFile]);
+                } else {
+                    $error = 'Gagal mengupload logo!';
+                }
+            }
+        }
+        
+        // Hapus logo jika tombol hapus ditekan
+        if (isset($_POST['hapus_logo']) && $_POST['hapus_logo'] == '1') {
+            $logoLama = getPengaturan('logo_sekolah');
+            if ($logoLama && file_exists('../' . $logoLama)) {
+                unlink('../' . $logoLama);
+            }
+            $stmt = $pdo->prepare("UPDATE pengaturan SET nilai = '' WHERE nama_pengaturan = 'logo_sekolah'");
+            $stmt->execute();
+        }
+        
+        // Update pengaturan teks
         $pengaturan = [
             'nama_lomba' => $nama_lomba,
             'tanggal_penutupan' => $tanggal_penutupan,
@@ -33,7 +98,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->execute([$nilai, $nama]);
         }
         
-        $success = 'Pengaturan berhasil disimpan!';
+        if (empty($error)) {
+            $success = 'Pengaturan berhasil disimpan!';
+        }
     } catch (PDOException $e) {
         $error = 'Terjadi kesalahan dalam menyimpan pengaturan!';
     }
@@ -52,6 +119,8 @@ try {
 } catch (PDOException $e) {
     $error = "Terjadi kesalahan dalam mengambil data!";
 }
+
+$logoPath = $pengaturan_data['logo_sekolah'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -97,7 +166,7 @@ try {
                             <h5><i class="fas fa-cog me-2"></i>Konfigurasi Lomba</h5>
                         </div>
                         <div class="card-body">
-                            <form method="POST">
+                            <form method="POST" enctype="multipart/form-data">
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="nama_lomba" class="form-label">Nama Lomba <span class="text-danger">*</span></label>
@@ -121,6 +190,36 @@ try {
                                         <label for="kontak_panitia" class="form-label">Kontak Panitia <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="kontak_panitia" name="kontak_panitia" 
                                                value="<?php echo htmlspecialchars($pengaturan_data['kontak_panitia'] ?? ''); ?>" required>
+                                    </div>
+                                </div>
+
+                                <!-- Logo Sekolah -->
+                                <div class="mb-3">
+                                    <label for="logo_sekolah" class="form-label"><i class="fas fa-image me-1"></i> Logo Sekolah / Lomba</label>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <input type="file" class="form-control" id="logo_sekolah" name="logo_sekolah" accept="image/*" onchange="previewLogo(this)">
+                                            <small class="text-muted">Format: JPG, PNG, GIF, WEBP, SVG. Maks: 2MB</small>
+                                            <input type="hidden" name="hapus_logo" id="hapus_logo" value="0">
+                                        </div>
+                                        <div class="col-md-4 text-center mt-2 mt-md-0">
+                                            <?php if ($logoPath && file_exists('../' . $logoPath)): ?>
+                                                <div id="logo-preview">
+                                                    <img src="../<?php echo htmlspecialchars($logoPath); ?>" alt="Logo" style="max-height: 100px; max-width: 150px; border-radius: 10px; border: 2px solid #e9ecef; padding: 5px;">
+                                                    <br>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="hapusLogo()">
+                                                        <i class="fas fa-trash me-1"></i>Hapus Logo
+                                                    </button>
+                                                </div>
+                                            <?php else: ?>
+                                                <div id="logo-preview">
+                                                    <div style="width: 100px; height: 100px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #ccc;">
+                                                        <i class="fas fa-image fa-2x"></i>
+                                                    </div>
+                                                    <small class="text-muted d-block mt-1">Belum ada logo</small>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -182,5 +281,29 @@ try {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function previewLogo(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('logo-preview').innerHTML = 
+                    '<img src="' + e.target.result + '" alt="Preview Logo" style="max-height: 100px; max-width: 150px; border-radius: 10px; border: 2px solid #667eea; padding: 5px;">' +
+                    '<br><small class="text-success mt-1 d-block"><i class="fas fa-check-circle"></i> Siap diupload</small>';
+            }
+            reader.readAsDataURL(input.files[0]);
+            document.getElementById('hapus_logo').value = '0';
+        }
+    }
+    function hapusLogo() {
+        if (confirm('Yakin ingin menghapus logo?')) {
+            document.getElementById('hapus_logo').value = '1';
+            document.getElementById('logo_sekolah').value = '';
+            document.getElementById('logo-preview').innerHTML = 
+                '<div style="width: 100px; height: 100px; border: 2px dashed #e74c3c; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #e74c3c;">' +
+                '<i class="fas fa-trash fa-2x"></i></div>' +
+                '<small class="text-danger d-block mt-1">Logo akan dihapus saat disimpan</small>';
+        }
+    }
+    </script>
 </body>
 </html>
