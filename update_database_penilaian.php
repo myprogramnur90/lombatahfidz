@@ -57,20 +57,16 @@ try {
     ];
     
     foreach ($pengaturan_baru as $pengaturan) {
-        $sql_cek = "SELECT id FROM pengaturan WHERE nama_pengaturan = ?";
-        $stmt_cek = $conn->prepare($sql_cek);
-        $stmt_cek->bind_param("s", $pengaturan[0]);
-        $stmt_cek->execute();
+        $stmt_cek = $pdo->prepare("SELECT id FROM pengaturan WHERE nama_pengaturan = ?");
+        $stmt_cek->execute([$pengaturan[0]]);
         
-        if ($stmt_cek->get_result()->num_rows == 0) {
-            $sql_insert = "INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES (?, ?, ?)";
-            $stmt_insert = $conn->prepare($sql_insert);
-            $stmt_insert->bind_param("sss", $pengaturan[0], $pengaturan[1], $pengaturan[2]);
+        if ($stmt_cek->rowCount() == 0) {
+            $stmt_insert = $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES (?, ?, ?)");
             
-            if ($stmt_insert->execute()) {
+            if ($stmt_insert->execute([$pengaturan[0], $pengaturan[1], $pengaturan[2]])) {
                 echo "<p style='color: green;'>✓ Pengaturan '{$pengaturan[0]}' berhasil ditambahkan</p>";
             } else {
-                echo "<p style='color: red;'>✗ Error menambahkan pengaturan {$pengaturan[0]}: " . $conn->error . "</p>";
+                echo "<p style='color: red;'>✗ Error menambahkan pengaturan {$pengaturan[0]}</p>";
             }
         } else {
             echo "<p style='color: orange;'>⚠ Pengaturan '{$pengaturan[0]}' sudah ada</p>";
@@ -78,8 +74,7 @@ try {
     }
     
     // Insert juri default jika belum ada
-    $sql_cek_juri = "SELECT COUNT(*) as total FROM juri";
-    $result_cek = $pdo->query($sql_cek_juri);
+    $result_cek = $pdo->query("SELECT COUNT(*) as total FROM juri");
     $total_juri = $result_cek->fetch()['total'];
     
     if ($total_juri == 0) {
@@ -89,16 +84,14 @@ try {
             ['Ust. Abdullah Hafizh', 'juri3', 'juri123', 'juri3@lombatahfidz.com', '081333333333', 'Keseluruhan dan Hafalan']
         ];
         
-        $sql_insert_juri = "INSERT INTO juri (nama_lengkap, username, password, email, no_hp, spesialisasi) VALUES (?, ?, MD5(?), ?, ?, ?)";
-        $stmt_insert_juri = $conn->prepare($sql_insert_juri);
+        $stmt_insert_juri = $pdo->prepare("INSERT INTO juri (nama_lengkap, username, password, email, no_hp, spesialisasi) VALUES (?, ?, ?, ?, ?, ?)");
         
         foreach ($juri_default as $juri) {
-            $stmt_insert_juri->bind_param("ssssss", $juri[0], $juri[1], $juri[2], $juri[3], $juri[4], $juri[5]);
-            
-            if ($stmt_insert_juri->execute()) {
+            $hashedPassword = password_hash($juri[2], PASSWORD_DEFAULT);
+            if ($stmt_insert_juri->execute([$juri[0], $juri[1], $hashedPassword, $juri[3], $juri[4], $juri[5]])) {
                 echo "<p style='color: green;'>✓ Juri '{$juri[0]}' berhasil ditambahkan</p>";
             } else {
-                echo "<p style='color: red;'>✗ Error menambahkan juri {$juri[0]}: " . $conn->error . "</p>";
+                echo "<p style='color: red;'>✗ Error menambahkan juri {$juri[0]}</p>";
             }
         }
     } else {
