@@ -90,6 +90,11 @@ function isActive($page) {
             <div class="px-3 pt-3 pb-1">
                 <small class="text-uppercase fw-bold" style="color: rgba(255,255,255,0.6); font-size: 0.75rem;">Sistem</small>
             </div>
+            <a class="nav-link <?php echo isActive('database.php'); ?>" href="database.php"
+               data-bs-toggle="tooltip" data-bs-placement="right" title="Kelola Database">
+                <i class="fas fa-database me-2"></i>
+                <span class="menu-text">Kelola Database</span>
+            </a>
             <a class="nav-link <?php echo isActive('pengaturan.php'); ?>" href="pengaturan.php"
                data-bs-toggle="tooltip" data-bs-placement="right" title="Pengaturan Sistem">
                 <i class="fas fa-cog me-2"></i>
