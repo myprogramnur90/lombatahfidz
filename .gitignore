@@ -15,6 +15,7 @@ uploads/dokumen_berka/*
 # Log files
 *.log
 error_log
+deploy.log
 
 # OS files
 .DS_Store
