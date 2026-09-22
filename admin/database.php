@@ -19,6 +19,31 @@ if (!file_exists($backupDir)) {
 }
 
 // =============================================
+// FUNGSI: Verifikasi Password Admin
+// =============================================
+function verifyAdminPassword($pdo, $adminId, $password) {
+    $stmt = $pdo->prepare("SELECT password FROM admin WHERE id = ?");
+    $stmt->execute([$adminId]);
+    $admin = $stmt->fetch();
+    if ($admin && password_verify($password, $admin['password'])) {
+        return true;
+    }
+    return false;
+}
+
+// Cek password untuk aksi sensitif (backup, restore, delete_backup)
+$sensitiveActions = ['backup', 'restore', 'delete_backup'];
+if (isset($_POST['action']) && in_array($_POST['action'], $sensitiveActions)) {
+    if (empty($_POST['admin_password'])) {
+        $error = 'Password admin wajib diisi untuk melakukan aksi ini!';
+        $_POST['action'] = '';
+    } elseif (!verifyAdminPassword($pdo, $_SESSION['admin_id'], $_POST['admin_password'])) {
+        $error = 'Password admin salah! Aksi dibatalkan.';
+        $_POST['action'] = '';
+    }
+}
+
+// =============================================
 // AKSI: BACKUP DATABASE
 // =============================================
 if (isset($_POST['action']) && $_POST['action'] === 'backup') {
@@ -351,9 +376,10 @@ try {
                                 </div>
                                 <div class="card-body">
                                     <p class="text-muted">Buat salinan database saat ini untuk cadangan. File backup berformat .sql dan bisa digunakan untuk memulihkan data.</p>
-                                    <form method="POST">
+                                    <form method="POST" id="formBackup">
                                         <input type="hidden" name="action" value="backup">
-                                        <button type="submit" class="btn btn-success btn-lg w-100">
+                                        <input type="hidden" name="admin_password" class="admin-password-field" value="">
+                                        <button type="button" class="btn btn-success btn-lg w-100 btn-need-password" data-form="formBackup">
                                             <i class="fas fa-download me-2"></i>Buat Backup Sekarang
                                         </button>
                                     </form>
@@ -369,12 +395,13 @@ try {
                                 </div>
                                 <div class="card-body">
                                     <p class="text-muted">Upload file .sql untuk memulihkan database ke kondisi sebelumnya.</p>
-                                    <form method="POST" enctype="multipart/form-data" onsubmit="return confirm('⚠️ PERINGATAN: Restore akan MENIMPA data yang ada saat ini. Pastikan Anda sudah backup terlebih dahulu. Lanjutkan?');">
+                                    <form method="POST" enctype="multipart/form-data" id="formRestore">
                                         <input type="hidden" name="action" value="restore">
+                                        <input type="hidden" name="admin_password" class="admin-password-field" value="">
                                         <div class="mb-3">
                                             <input type="file" class="form-control" name="sql_file" accept=".sql" required>
                                         </div>
-                                        <button type="submit" class="btn btn-warning btn-lg w-100">
+                                        <button type="button" class="btn btn-warning btn-lg w-100 btn-need-password" data-form="formRestore" data-confirm="⚠️ PERINGATAN: Restore akan MENIMPA data yang ada saat ini. Pastikan Anda sudah backup terlebih dahulu. Lanjutkan?">
                                             <i class="fas fa-upload me-2"></i>Restore dari File
                                         </button>
                                     </form>
@@ -408,18 +435,20 @@ try {
                                                 <i class="fas fa-download"></i>
                                             </a>
                                             <!-- Restore -->
-                                            <form method="POST" class="d-inline" onsubmit="return confirm('⚠️ Restore dari backup ini akan MENIMPA data saat ini. Lanjutkan?');">
+                                            <form method="POST" class="d-inline" id="formRestoreBackup_<?php echo md5($bf['name']); ?>">
                                                 <input type="hidden" name="action" value="restore">
                                                 <input type="hidden" name="restore_file" value="<?php echo htmlspecialchars($bf['name']); ?>">
-                                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Restore">
+                                                <input type="hidden" name="admin_password" class="admin-password-field" value="">
+                                                <button type="button" class="btn btn-sm btn-outline-warning btn-need-password" title="Restore" data-form="formRestoreBackup_<?php echo md5($bf['name']); ?>" data-confirm="⚠️ Restore dari backup ini akan MENIMPA data saat ini. Lanjutkan?">
                                                     <i class="fas fa-undo"></i>
                                                 </button>
                                             </form>
                                             <!-- Hapus -->
-                                            <form method="POST" class="d-inline" onsubmit="return confirm('Hapus file backup ini?');">
+                                            <form method="POST" class="d-inline" id="formDeleteBackup_<?php echo md5($bf['name']); ?>">
                                                 <input type="hidden" name="action" value="delete_backup">
                                                 <input type="hidden" name="delete_file" value="<?php echo htmlspecialchars($bf['name']); ?>">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
+                                                <input type="hidden" name="admin_password" class="admin-password-field" value="">
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-need-password" title="Hapus" data-form="formDeleteBackup_<?php echo md5($bf['name']); ?>" data-confirm="Hapus file backup ini?">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
@@ -440,6 +469,114 @@ try {
         </div>
     </div>
 
+    <!-- Modal Konfirmasi Password Admin -->
+    <div class="modal fade" id="modalPassword" tabindex="-1" aria-labelledby="modalPasswordLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 15px; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                    <h5 class="modal-title" id="modalPasswordLabel">
+                        <i class="fas fa-shield-alt me-2"></i>Konfirmasi Password Admin
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-lock fa-3x text-muted mb-2"></i>
+                        <p class="text-muted">Masukkan password admin Anda untuk melanjutkan aksi ini.</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="inputAdminPassword" class="form-label fw-bold">Password Admin</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="border-radius: 10px 0 0 10px;"><i class="fas fa-key"></i></span>
+                            <input type="password" class="form-control" id="inputAdminPassword" placeholder="Masukkan password..." autofocus style="border-radius: 0 10px 10px 0;">
+                        </div>
+                        <div class="invalid-feedback" id="passwordError">Password tidak boleh kosong!</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 10px;">
+                        <i class="fas fa-times me-1"></i>Batal
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmPassword" style="border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        <i class="fas fa-check me-1"></i>Konfirmasi & Lanjutkan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let currentFormId = null;
+        const modal = new bootstrap.Modal(document.getElementById('modalPassword'));
+        const passwordInput = document.getElementById('inputAdminPassword');
+        const btnConfirm = document.getElementById('btnConfirmPassword');
+
+        // Semua tombol yang membutuhkan password
+        document.querySelectorAll('.btn-need-password').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const formId = this.getAttribute('data-form');
+                const confirmMsg = this.getAttribute('data-confirm');
+
+                // Jika ada pesan konfirmasi, tanya dulu
+                if (confirmMsg) {
+                    if (!confirm(confirmMsg)) {
+                        return;
+                    }
+                }
+
+                // Validasi form (cek file upload jika ada)
+                const form = document.getElementById(formId);
+                const fileInput = form.querySelector('input[type="file"]');
+                if (fileInput && fileInput.hasAttribute('required') && !fileInput.value) {
+                    fileInput.reportValidity();
+                    return;
+                }
+
+                currentFormId = formId;
+                passwordInput.value = '';
+                passwordInput.classList.remove('is-invalid');
+                modal.show();
+
+                // Fokus ke input password setelah modal muncul
+                document.getElementById('modalPassword').addEventListener('shown.bs.modal', function() {
+                    passwordInput.focus();
+                }, { once: true });
+            });
+        });
+
+        // Konfirmasi password
+        btnConfirm.addEventListener('click', function() {
+            const password = passwordInput.value.trim();
+            if (!password) {
+                passwordInput.classList.add('is-invalid');
+                return;
+            }
+
+            if (currentFormId) {
+                const form = document.getElementById(currentFormId);
+                const pwField = form.querySelector('.admin-password-field');
+                pwField.value = password;
+                modal.hide();
+                form.submit();
+            }
+        });
+
+        // Enter key untuk submit
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                btnConfirm.click();
+            }
+        });
+
+        // Reset state saat modal ditutup
+        document.getElementById('modalPassword').addEventListener('hidden.bs.modal', function() {
+            passwordInput.value = '';
+            passwordInput.classList.remove('is-invalid');
+            currentFormId = null;
+        });
+    });
+    </script>
 </body>
 </html>
