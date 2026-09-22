@@ -22,12 +22,12 @@ try {
     // Abaikan jika sudah ada
 }
 
-// Pastikan pengaturan ceo ada di database
+// Pastikan pengaturan seo ada di database
 try {
-    $cekCeo = $pdo->prepare("SELECT COUNT(*) FROM pengaturan WHERE nama_pengaturan = 'ceo'");
-    $cekCeo->execute();
-    if ($cekCeo->fetchColumn() == 0) {
-        $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('ceo', '', 'Nama CEO / Penanggung Jawab')")->execute();
+    $cekSeo = $pdo->prepare("SELECT COUNT(*) FROM pengaturan WHERE nama_pengaturan = 'seo'");
+    $cekSeo->execute();
+    if ($cekSeo->fetchColumn() == 0) {
+        $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('seo', '', 'Meta description untuk SEO')")->execute();
     }
 } catch (PDOException $e) {
     // Abaikan jika sudah ada
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $biaya_pendaftaran = trim($_POST['biaya_pendaftaran']);
     $kontak_panitia = trim($_POST['kontak_panitia']);
     $alamat_sekretariat = trim($_POST['alamat_sekretariat']);
-    $ceo = trim($_POST['ceo'] ?? '');
+    $seo = trim($_POST['seo'] ?? '');
     
     try {
         // Handle upload logo
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'biaya_pendaftaran' => $biaya_pendaftaran,
             'kontak_panitia' => $kontak_panitia,
             'alamat_sekretariat' => $alamat_sekretariat,
-            'ceo' => $ceo
+            'seo' => $seo
         ];
         
         foreach ($pengaturan as $nama => $nilai) {
@@ -208,10 +208,10 @@ $logoPath = $pengaturan_data['logo_sekolah'] ?? '';
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="ceo" class="form-label"><i class="fas fa-user-tie me-1"></i>CEO / Penanggung Jawab</label>
-                                        <input type="text" class="form-control" id="ceo" name="ceo" 
-                                               value="<?php echo htmlspecialchars($pengaturan_data['ceo'] ?? ''); ?>" 
-                                               placeholder="Masukkan nama CEO / Penanggung Jawab">
+                                        <label for="seo" class="form-label"><i class="fas fa-search me-1"></i>SEO (Meta Description)</label>
+                                        <input type="text" class="form-control" id="seo" name="seo" 
+                                               value="<?php echo htmlspecialchars($pengaturan_data['seo'] ?? ''); ?>" 
+                                               placeholder="Masukkan deskripsi singkat untuk SEO">
                                     </div>
                                 </div>
 
