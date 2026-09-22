@@ -24,7 +24,7 @@ if (!hash_equals($expected, $signature)) {
 }
 
 // Jalankan git pull
-$repo_path = '/home/u930333972/public_html';
+$repo_path = '/home/u930333972/public_html/mhqs';
 $output = shell_exec("cd $repo_path && git pull origin main 2>&1");
 
 // Log hasil deploy
