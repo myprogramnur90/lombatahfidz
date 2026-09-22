@@ -141,12 +141,9 @@ try {
         ) db ON p.sekolah_id = db.sekolah_id
         $where_clause
         ORDER BY p.created_at DESC
-        LIMIT ? OFFSET ?
-    ";
+        LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
     
     $stmt = $pdo->prepare($query);
-    $params[] = $limit;
-    $params[] = $offset;
     $stmt->execute($params);
     $peserta_list = $stmt->fetchAll();
     
