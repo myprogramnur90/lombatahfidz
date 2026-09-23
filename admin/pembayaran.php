@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 // Proses tambah pembayaran manual
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add_pembayaran') {
     $sekolah_id = $_POST['sekolah_id'];
-    $nominal = $_POST['nominal'];
+    $nominal = str_replace('.', '', $_POST['nominal']);
     $tanggal_bayar = $_POST['tanggal_bayar'];
     $status_pembayaran = $_POST['status_pembayaran'];
     $catatan = trim($_POST['catatan']);
@@ -468,7 +468,7 @@ try {
                                             <label class="form-label">Nominal Pembayaran <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <span class="input-group-text">Rp</span>
-                                                <input type="number" class="form-control" name="nominal" required min="0">
+                                                <input type="text" class="form-control format-rupiah" name="nominal" required>
                                             </div>
                                         </div>
                                         <div class="mb-3">
@@ -597,6 +597,30 @@ try {
             } else {
                 console.error('window.print is not available');
             }
+        }
+
+        // Format Rupiah
+        const formatRupiahList = document.querySelectorAll('.format-rupiah');
+        formatRupiahList.forEach(function(input) {
+            input.addEventListener('keyup', function(e) {
+                this.value = formatRupiah(this.value);
+            });
+        });
+
+        function formatRupiah(angka) {
+            var number_string = angka.replace(/[^,\d]/g, '').toString(),
+            split           = number_string.split(','),
+            sisa            = split[0].length % 3,
+            rupiah          = split[0].substr(0, sisa),
+            ribuan          = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if(ribuan){
+                separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
         }
     </script>
 </body>
