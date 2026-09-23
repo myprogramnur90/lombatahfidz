@@ -77,6 +77,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
+// Proses hapus sekolah
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'delete') {
+    $id = (int)$_POST['sekolah_id'];
+    try {
+        $stmt = $pdo->prepare("DELETE FROM sekolah WHERE id = ?");
+        $stmt->execute([$id]);
+        $success = 'Data sekolah berhasil dihapus!';
+    } catch (PDOException $e) {
+        $error = 'Tidak dapat menghapus sekolah karena mungkin ada data peserta yang terhubung!';
+    }
+}
+
 // Cek flash message dari import
 if (isset($_SESSION['import_success'])) {
     $success = $_SESSION['import_success'];
@@ -182,11 +194,98 @@ try {
                                                     </td>
                                                     <td><?php echo date('d/m/Y', strtotime($sekolah['created_at'])); ?></td>
                                                     <td>
-                                                        <button class="btn btn-sm btn-outline-primary" onclick="editSekolah(<?php echo $sekolah['id']; ?>, '<?php echo htmlspecialchars($sekolah['nama_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['npsn'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['alamat_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['no_hp_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['email_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['nama_kepala_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['username'], ENT_QUOTES); ?>', '<?php echo $sekolah['status']; ?>')">
+                                                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#detailSekolahModal<?php echo $sekolah['id']; ?>" title="Detail">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="editSekolah(<?php echo $sekolah['id']; ?>, '<?php echo htmlspecialchars($sekolah['nama_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['npsn'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['alamat_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['no_hp_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['email_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['nama_kepala_sekolah'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($sekolah['username'], ENT_QUOTES); ?>', '<?php echo $sekolah['status']; ?>')" title="Edit">
                                                             <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSekolahModal<?php echo $sekolah['id']; ?>" title="Hapus">
+                                                            <i class="fas fa-trash"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
+                                                
+                                                <!-- Modal Detail Sekolah -->
+                                                <div class="modal fade" id="detailSekolahModal<?php echo $sekolah['id']; ?>" tabindex="-1">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Detail Sekolah</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <table class="table table-bordered">
+                                                                    <tr>
+                                                                        <th>Nama Sekolah</th>
+                                                                        <td><?php echo htmlspecialchars($sekolah['nama_sekolah']); ?></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>NPSN</th>
+                                                                        <td><?php echo htmlspecialchars($sekolah['npsn']); ?></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Alamat</th>
+                                                                        <td><?php echo htmlspecialchars($sekolah['alamat_sekolah']); ?></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>No HP</th>
+                                                                        <td><?php echo htmlspecialchars($sekolah['no_hp_sekolah']); ?></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Email</th>
+                                                                        <td><?php echo htmlspecialchars($sekolah['email_sekolah']); ?></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Kepala Sekolah</th>
+                                                                        <td><?php echo htmlspecialchars($sekolah['nama_kepala_sekolah']); ?></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Username</th>
+                                                                        <td><?php echo htmlspecialchars($sekolah['username']); ?></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Status</th>
+                                                                        <td>
+                                                                            <span class="badge bg-<?php echo $sekolah['status'] == 'Aktif' ? 'success' : 'danger'; ?>">
+                                                                                <?php echo $sekolah['status']; ?>
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Modal Delete Sekolah -->
+                                                <div class="modal fade" id="deleteSekolahModal<?php echo $sekolah['id']; ?>" tabindex="-1">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header bg-danger text-white">
+                                                                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Konfirmasi Hapus</h5>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <form method="POST">
+                                                                <input type="hidden" name="action" value="delete">
+                                                                <input type="hidden" name="sekolah_id" value="<?php echo $sekolah['id']; ?>">
+                                                                <div class="modal-body">
+                                                                    <div class="alert alert-danger">
+                                                                        <p class="mb-0">Anda yakin ingin menghapus data sekolah <strong><?php echo htmlspecialchars($sekolah['nama_sekolah']); ?></strong>?</p>
+                                                                    </div>
+                                                                    <p class="text-muted"><small><em>Catatan: Data tidak dapat dihapus jika masih ada data peserta yang terhubung dengan sekolah ini.</em></small></p>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                                    <button type="submit" class="btn btn-danger">Hapus Data</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
