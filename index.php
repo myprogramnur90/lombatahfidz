@@ -427,10 +427,11 @@ $posts = $stmtPosts->fetchAll();
                         <h6>Grup WA / Kontak</h6>
                         <div class="info-value">
                             <?php 
-                            $isGroupLink = (strpos($kontakPanitia, 'chat.whatsapp.com') !== false || strpos($kontakPanitia, 'http') !== false);
+                            $linkGrupWa = getPengaturan('link_grup_wa');
+                            $isGroupLink = (!empty($linkGrupWa));
                             
                             if ($isGroupLink) {
-                                $waLink = $kontakPanitia;
+                                $waLink = $linkGrupWa;
                                 // Jika tidak ada http/https di awal, tambahkan
                                 if (strpos($waLink, 'http') !== 0) {
                                     $waLink = 'https://' . $waLink;
@@ -533,12 +534,7 @@ $posts = $stmtPosts->fetchAll();
                 </div>
                 <div class="col-md-6 text-md-end mt-3 mt-md-0">
                     <small>
-                        <i class="fas fa-phone-alt me-1"></i> Kontak Panitia: 
-                        <?php if ($isGroupLink): ?>
-                            <a href="<?php echo htmlspecialchars($waLink); ?>" target="_blank" class="text-white text-decoration-underline">Join Grup WA</a>
-                        <?php else: ?>
-                            <?php echo htmlspecialchars($kontakPanitia); ?>
-                        <?php endif; ?>
+                        <i class="fas fa-phone-alt me-1"></i> Kontak Panitia: <?php echo htmlspecialchars($kontakPanitia); ?>
                     </small>
                     <br>
                     <small>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($namaLomba); ?>. All rights reserved.</small>

@@ -33,12 +33,24 @@ try {
     // Abaikan jika sudah ada
 }
 
+// Pastikan pengaturan link_grup_wa ada di database
+try {
+    $cekGrupWa = $pdo->prepare("SELECT COUNT(*) FROM pengaturan WHERE nama_pengaturan = 'link_grup_wa'");
+    $cekGrupWa->execute();
+    if ($cekGrupWa->fetchColumn() == 0) {
+        $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('link_grup_wa', '', 'Tautan grup WhatsApp')")->execute();
+    }
+} catch (PDOException $e) {
+    // Abaikan jika sudah ada
+}
+
 // Proses update pengaturan
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nama_lomba = trim($_POST['nama_lomba']);
     $tanggal_penutupan = $_POST['tanggal_penutupan'];
     $biaya_pendaftaran = trim($_POST['biaya_pendaftaran']);
     $kontak_panitia = trim($_POST['kontak_panitia']);
+    $link_grup_wa = trim($_POST['link_grup_wa']);
     $alamat_sekretariat = trim($_POST['alamat_sekretariat']);
     $seo = trim($_POST['seo'] ?? '');
     
@@ -108,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'tanggal_penutupan' => $tanggal_penutupan,
             'biaya_pendaftaran' => $biaya_pendaftaran,
             'kontak_panitia' => $kontak_panitia,
+            'link_grup_wa' => $link_grup_wa,
             'alamat_sekretariat' => $alamat_sekretariat,
             'seo' => $seo
         ];
@@ -213,6 +226,12 @@ $logoPath = $pengaturan_data['logo_sekolah'] ?? '';
                                 </div>
 
                                 <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="link_grup_wa" class="form-label"><i class="fab fa-whatsapp me-1"></i>Link Grup WA</label>
+                                        <input type="url" class="form-control" id="link_grup_wa" name="link_grup_wa" 
+                                               value="<?php echo htmlspecialchars($pengaturan_data['link_grup_wa'] ?? ''); ?>" 
+                                               placeholder="https://chat.whatsapp.com/...">
+                                    </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="seo" class="form-label"><i class="fas fa-search me-1"></i>SEO (Meta Description)</label>
                                         <input type="text" class="form-control" id="seo" name="seo" 
