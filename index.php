@@ -60,8 +60,7 @@ $stmtPosts = $pdo->prepare("SELECT p.*, s.nama_sekolah
                              LEFT JOIN sekolah s ON p.sekolah_id = s.id 
                              WHERE p.status = 'Published' 
                              AND p.target_audience = 'Umum'
-                             ORDER BY p.created_at DESC 
-                             LIMIT 6");
+                             ORDER BY p.created_at DESC");
 $stmtPosts->execute();
 $posts = $stmtPosts->fetchAll();
 ?>
