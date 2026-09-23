@@ -171,6 +171,8 @@ if (isset($_POST['change_password'])) {
                     </div>
                     <div class="card-body">
                         <form method="POST">
+                            <?php echo getCsrfInput(); ?>
+                            <input type="hidden" name="action" value="update_profil">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="nama_lengkap" class="form-label">Nama Lengkap</label>
@@ -223,6 +225,7 @@ if (isset($_POST['change_password'])) {
                     </div>
                     <div class="card-body">
                         <form method="POST">
+                            <?php echo getCsrfInput(); ?>
                             <input type="hidden" name="change_password" value="1">
                             
                             <div class="mb-3">

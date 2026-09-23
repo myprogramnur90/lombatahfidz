@@ -125,6 +125,7 @@ try {
                                 </div>
                                 <div class="card-body">
                                     <form method="POST">
+                                        <?php echo getCsrfInput(); ?>
                                         <input type="hidden" name="action" value="update_password">
                                         <div class="mb-3">
                                             <label for="current_password" class="form-label">Password Lama</label>
