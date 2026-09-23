@@ -425,7 +425,17 @@ $posts = $stmtPosts->fetchAll();
                             <i class="fas fa-phone-alt"></i>
                         </div>
                         <h6>Kontak Panitia</h6>
-                        <div class="info-value"><?php echo htmlspecialchars($kontakPanitia); ?></div>
+                        <div class="info-value">
+                            <?php 
+                            $waNumber = preg_replace('/[^0-9]/', '', $kontakPanitia);
+                            if (substr($waNumber, 0, 1) === '0') {
+                                $waNumber = '62' . substr($waNumber, 1);
+                            }
+                            ?>
+                            <a href="https://wa.me/<?php echo $waNumber; ?>" target="_blank" style="text-decoration: none; color: inherit;">
+                                <?php echo htmlspecialchars($kontakPanitia); ?> <i class="fab fa-whatsapp text-success fs-6"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-3 col-6">
