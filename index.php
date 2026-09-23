@@ -35,6 +35,25 @@ if ($tanggalPenutupan) {
     $tanggalFormatted = $date->format('d') . ' ' . $bulan[(int)$date->format('m')] . ' ' . $date->format('Y');
 }
 
+// Logic untuk menghitung kunjungan
+$stmtKunjungan = $pdo->prepare("SELECT nilai FROM pengaturan WHERE nama_pengaturan = 'jumlah_kunjungan'");
+$stmtKunjungan->execute();
+$kunjungan = $stmtKunjungan->fetch();
+
+if (!$kunjungan) {
+    // Jika belum ada, buat pengaturan baru
+    $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('jumlah_kunjungan', '1', 'Jumlah total kunjungan halaman utama')")->execute();
+    $jumlahKunjungan = 1;
+} else {
+    $jumlahKunjungan = (int)$kunjungan['nilai'];
+    // Hitung per sesi agar tidak setiap refresh nambah terus (opsional)
+    if (!isset($_SESSION['has_visited_frontpage'])) {
+        $jumlahKunjungan++;
+        $pdo->prepare("UPDATE pengaturan SET nilai = ? WHERE nama_pengaturan = 'jumlah_kunjungan'")->execute([$jumlahKunjungan]);
+        $_SESSION['has_visited_frontpage'] = true;
+    }
+}
+
 // Ambil posting publik (Published & target Umum)
 $stmtPosts = $pdo->prepare("SELECT p.*, s.nama_sekolah 
                              FROM posts p 
@@ -205,6 +224,7 @@ $posts = $stmtPosts->fetchAll();
         .info-icon-date { background: rgba(102, 126, 234, 0.1); color: var(--primary); }
         .info-icon-fee { background: rgba(46, 204, 113, 0.1); color: #2ecc71; }
         .info-icon-contact { background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+        .info-icon-visitor { background: rgba(155, 89, 182, 0.1); color: #9b59b6; }
         .info-card h6 {
             font-weight: 600;
             color: #888;
@@ -372,7 +392,7 @@ $posts = $stmtPosts->fetchAll();
     <section class="info-section">
         <div class="container">
             <div class="row g-4">
-                <div class="col-md-4">
+                <div class="col-md-3 col-6">
                     <div class="info-card">
                         <div class="info-icon info-icon-date">
                             <i class="fas fa-calendar-alt"></i>
@@ -381,7 +401,7 @@ $posts = $stmtPosts->fetchAll();
                         <div class="info-value"><?php echo $tanggalFormatted ?: '-'; ?></div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3 col-6">
                     <div class="info-card">
                         <div class="info-icon info-icon-fee">
                             <i class="fas fa-money-bill-wave"></i>
@@ -390,13 +410,22 @@ $posts = $stmtPosts->fetchAll();
                         <div class="info-value">Rp <?php echo number_format((int)$biayaPendaftaran, 0, ',', '.'); ?></div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3 col-6">
                     <div class="info-card">
                         <div class="info-icon info-icon-contact">
                             <i class="fas fa-phone-alt"></i>
                         </div>
                         <h6>Kontak Panitia</h6>
                         <div class="info-value"><?php echo htmlspecialchars($kontakPanitia); ?></div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="info-card">
+                        <div class="info-icon info-icon-visitor">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h6>Jumlah Kunjungan</h6>
+                        <div class="info-value"><?php echo number_format($jumlahKunjungan, 0, ',', '.'); ?></div>
                     </div>
                 </div>
             </div>
