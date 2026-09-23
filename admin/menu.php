@@ -210,8 +210,27 @@ function isActive($page) {
 /* Sidebar styles */
 .sidebar {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
+    height: 100vh;
     color: white;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .sidebar .nav-link {
