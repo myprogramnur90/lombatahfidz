@@ -325,7 +325,7 @@ if (isset($_SESSION['error'])) {
                         
                         <div class="mb-3">
                             <label for="konten" class="form-label">Konten</label>
-                            <textarea class="form-control" id="konten" name="konten" rows="6" required></textarea>
+                            <textarea class="form-control" id="konten" name="konten" rows="6"></textarea>
                         </div>
                         
                         <div class="mb-3">
@@ -396,7 +396,7 @@ if (isset($_SESSION['error'])) {
                         
                         <div class="mb-3">
                             <label for="edit_konten" class="form-label">Konten</label>
-                            <textarea class="form-control" id="edit_konten" name="konten" rows="6" required></textarea>
+                            <textarea class="form-control" id="edit_konten" name="konten" rows="6"></textarea>
                         </div>
                         
                         <div class="mb-3">
