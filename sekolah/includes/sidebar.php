@@ -13,7 +13,7 @@ if (session_status() == PHP_SESSION_NONE) {
 <div class="col-md-3 col-lg-2 px-0 d-none d-md-block">
     <div class="sidebar">
         <div class="p-3">
-            <h4><i class="fas fa-school me-2"></i><?php echo $_SESSION['nama_sekolah']; ?></h4>
+            <h4><i class="fas fa-school me-2"></i><?php echo htmlspecialchars($_SESSION['nama_sekolah'] ?? 'Panel Sekolah'); ?></h4>
             <hr>
         </div>
         <nav class="nav flex-column px-3">
@@ -44,7 +44,7 @@ if (session_status() == PHP_SESSION_NONE) {
 <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="sidebarMenuLabel">
-            <i class="fas fa-school me-2"></i><?php echo $_SESSION['nama_sekolah']; ?>
+            <i class="fas fa-school me-2"></i><?php echo htmlspecialchars($_SESSION['nama_sekolah'] ?? 'Panel Sekolah'); ?>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
