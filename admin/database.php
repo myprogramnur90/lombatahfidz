@@ -178,20 +178,33 @@ if (isset($_GET['download'])) {
 // AKSI: KOSONGKAN TABEL
 // =============================================
 if (isset($_POST['action']) && $_POST['action'] === 'empty_table') {
-    $tableName = $_POST['table_name'] ?? '';
+    $tablesToEmpty = $_POST['tables'] ?? [];
     
-    // Validasi nama tabel (hanya izinkan alfanumerik dan underscore)
-    if (!empty($tableName) && preg_match('/^[a-zA-Z0-9_]+$/', $tableName)) {
+    if (!empty($tablesToEmpty) && is_array($tablesToEmpty)) {
         try {
             $pdo->exec("SET FOREIGN_KEY_CHECKS=0");
-            $pdo->exec("TRUNCATE TABLE `$tableName`");
-            $pdo->exec("SET FOREIGN_KEY_CHECKS=1");
-            $success = "Isi tabel <strong>" . htmlspecialchars($tableName) . "</strong> berhasil dikosongkan.";
+            $successCount = 0;
+            
+            foreach ($tablesToEmpty as $tableName) {
+                // Validasi nama tabel (hanya izinkan alfanumerik dan underscore)
+                if (preg_match('/^[a-zA-Z0-9_]+$/', $tableName)) {
+                    $pdo->exec("TRUNCATE TABLE `$tableName`");
+                    $successCount++;
+                }
+            }
+            
+            if ($successCount > 0) {
+                $success = "Sebanyak <strong>$successCount</strong> tabel berhasil dikosongkan.";
+            } else {
+                $error = "Tidak ada tabel yang dikosongkan (nama tabel tidak valid).";
+            }
         } catch (PDOException $e) {
             $error = "Gagal mengosongkan tabel: " . $e->getMessage();
+        } finally {
+            $pdo->exec("SET FOREIGN_KEY_CHECKS=1");
         }
     } else {
-        $error = "Pilih tabel yang valid!";
+        $error = "Pilih minimal satu tabel untuk dikosongkan!";
     }
 }
 
@@ -440,20 +453,22 @@ try {
                                     <h5><i class="fas fa-eraser me-2 text-danger"></i>Kosongkan Tabel</h5>
                                 </div>
                                 <div class="card-body d-flex flex-column">
-                                    <p class="text-muted">Hapus seluruh isi data pada tabel yang dipilih. Data yang dihapus tidak dapat dikembalikan kecuali dari backup.</p>
-                                    <form method="POST" id="formEmptyTable" class="mt-auto">
+                                    <p class="text-muted mb-2">Pilih tabel yang ingin dikosongkan isinya secara permanen.</p>
+                                    <form method="POST" id="formEmptyTable" class="mt-auto d-flex flex-column h-100">
                                         <input type="hidden" name="action" value="empty_table">
                                         <input type="hidden" name="admin_password" class="admin-password-field" value="">
-                                        <div class="mb-3">
-                                            <select class="form-select form-control" name="table_name" required>
-                                                <option value="" disabled selected>-- Pilih Tabel --</option>
-                                                <?php foreach ($tableList as $t): ?>
-                                                    <option value="<?php echo htmlspecialchars($t); ?>"><?php echo htmlspecialchars($t); ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
+                                        <div class="mb-3 flex-grow-1 p-2" style="max-height: 180px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; background: #fff;">
+                                            <?php foreach ($tableList as $t): ?>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="tables[]" value="<?php echo htmlspecialchars($t); ?>" id="table_<?php echo htmlspecialchars($t); ?>">
+                                                    <label class="form-check-label w-100" style="cursor:pointer;" for="table_<?php echo htmlspecialchars($t); ?>">
+                                                        <?php echo htmlspecialchars($t); ?>
+                                                    </label>
+                                                </div>
+                                            <?php endforeach; ?>
                                         </div>
-                                        <button type="button" class="btn btn-danger btn-lg w-100 btn-need-password" data-form="formEmptyTable" data-confirm="⚠️ PERINGATAN: Seluruh isi data pada tabel yang dipilih akan dihapus permanen. Lanjutkan?">
-                                            <i class="fas fa-trash-alt me-2"></i>Kosongkan Tabel
+                                        <button type="button" class="btn btn-danger btn-lg w-100 btn-need-password" data-form="formEmptyTable" data-confirm="⚠️ PERINGATAN: Seluruh isi data pada tabel yang dicentang akan dihapus permanen. Lanjutkan?">
+                                            <i class="fas fa-trash-alt me-2"></i>Kosongkan Pilihan
                                         </button>
                                     </form>
                                 </div>
