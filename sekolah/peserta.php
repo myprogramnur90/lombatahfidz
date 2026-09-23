@@ -150,7 +150,7 @@ ob_start();
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Data Peserta - <?php echo $_SESSION['nama_sekolah']; ?></title>
+                    <title>Data Peserta - <?php echo htmlspecialchars($_SESSION['nama_sekolah'] ?? 'Sekolah'); ?></title>
                     <style>
                         body { font-family: Arial, sans-serif; margin: 20px; }
                         .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -172,7 +172,7 @@ ob_start();
                 <body>
                     <div class="print-header">
                         <h2>Data Peserta Lomba Tahfidz</h2>
-                        <h3><?php echo $_SESSION['nama_sekolah']; ?></h3>
+                        <h3><?php echo htmlspecialchars($_SESSION['nama_sekolah'] ?? 'Sekolah'); ?></h3>
                     </div>
                     <div class="print-info">
                         <p><strong>Tanggal Cetak:</strong> ${new Date().toLocaleDateString('id-ID')}</p>
