@@ -342,7 +342,7 @@ $posts = $stmtPosts->fetchAll();
             <a class="navbar-brand" href="index.php">
                 <i class="fas fa-quran"></i><?php echo htmlspecialchars($namaLomba); ?>
             </a>
-            <a href="auth/login.php" class="btn btn-nav-login">
+            <a href="auth/login.php" class="btn btn-nav-login d-none d-md-inline-block">
                 <i class="fas fa-sign-in-alt me-1"></i> Login
             </a>
         </div>
