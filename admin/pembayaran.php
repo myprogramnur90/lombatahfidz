@@ -229,7 +229,7 @@ try {
                                                     <td><?php echo date('d/m/Y H:i', strtotime($pembayaran['tanggal_bayar'])); ?></td>
                                                     <td>
                                                         <?php if ($pembayaran['bukti_pembayaran']): ?>
-                                                            <a href="../uploads/bukti_pembayaran/<?php echo $pembayaran['bukti_pembayaran']; ?>" target="_blank" title="Lihat Bukti">
+                                                            <a href="#" data-bs-toggle="modal" data-bs-target="#imageModal<?php echo $pembayaran['id']; ?>" title="Lihat Bukti">
                                                                 <img src="../uploads/bukti_pembayaran/<?php echo $pembayaran['bukti_pembayaran']; ?>" alt="Bukti" style="max-height: 50px; max-width: 50px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                             </a>
                                                         <?php else: ?>
@@ -246,6 +246,24 @@ try {
                                                     </td>
                                                 </tr>
                                                 <?php ob_start(); ?>
+                                                
+                                                <?php if ($pembayaran['bukti_pembayaran']): ?>
+                                                <!-- Modal Image -->
+                                                <div class="modal fade" id="imageModal<?php echo $pembayaran['id']; ?>" tabindex="-1">
+                                                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Bukti Pembayaran: <?php echo htmlspecialchars($pembayaran['nama_sekolah']); ?></h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body text-center p-0">
+                                                                <img src="../uploads/bukti_pembayaran/<?php echo $pembayaran['bukti_pembayaran']; ?>" alt="Bukti Pembayaran" style="max-width: 100%; height: auto;">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <?php endif; ?>
+
                                                 <!-- Modal Update Status -->
                                                 <div class="modal fade" id="statusModal<?php echo $pembayaran['id']; ?>" tabindex="-1">
                                                     <div class="modal-dialog">
