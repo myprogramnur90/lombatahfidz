@@ -422,19 +422,36 @@ $posts = $stmtPosts->fetchAll();
                 <div class="col-md-3 col-6">
                     <div class="info-card">
                         <div class="info-icon info-icon-contact">
-                            <i class="fas fa-phone-alt"></i>
+                            <i class="fab fa-whatsapp"></i>
                         </div>
-                        <h6>Kontak Panitia</h6>
+                        <h6>Grup WA / Kontak</h6>
                         <div class="info-value">
                             <?php 
-                            $waNumber = preg_replace('/[^0-9]/', '', $kontakPanitia);
-                            if (substr($waNumber, 0, 1) === '0') {
-                                $waNumber = '62' . substr($waNumber, 1);
+                            $isGroupLink = (strpos($kontakPanitia, 'chat.whatsapp.com') !== false || strpos($kontakPanitia, 'http') !== false);
+                            
+                            if ($isGroupLink) {
+                                $waLink = $kontakPanitia;
+                                // Jika tidak ada http/https di awal, tambahkan
+                                if (strpos($waLink, 'http') !== 0) {
+                                    $waLink = 'https://' . $waLink;
+                                }
+                                ?>
+                                <a href="<?php echo htmlspecialchars($waLink); ?>" target="_blank" class="btn btn-sm btn-success rounded-pill mt-1" style="font-size: 0.9rem; padding: 4px 15px;">
+                                    <i class="fab fa-whatsapp me-1"></i> Gabung Grup
+                                </a>
+                                <?php
+                            } else {
+                                $waNumber = preg_replace('/[^0-9]/', '', $kontakPanitia);
+                                if (substr($waNumber, 0, 1) === '0') {
+                                    $waNumber = '62' . substr($waNumber, 1);
+                                }
+                                ?>
+                                <a href="https://wa.me/<?php echo $waNumber; ?>" target="_blank" style="text-decoration: none; color: inherit;">
+                                    <?php echo htmlspecialchars($kontakPanitia); ?> <i class="fab fa-whatsapp text-success fs-6"></i>
+                                </a>
+                                <?php
                             }
                             ?>
-                            <a href="https://wa.me/<?php echo $waNumber; ?>" target="_blank" style="text-decoration: none; color: inherit;">
-                                <?php echo htmlspecialchars($kontakPanitia); ?> <i class="fab fa-whatsapp text-success fs-6"></i>
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -516,7 +533,12 @@ $posts = $stmtPosts->fetchAll();
                 </div>
                 <div class="col-md-6 text-md-end mt-3 mt-md-0">
                     <small>
-                        <i class="fas fa-phone-alt me-1"></i> <?php echo htmlspecialchars($kontakPanitia); ?>
+                        <i class="fas fa-phone-alt me-1"></i> Kontak Panitia: 
+                        <?php if ($isGroupLink): ?>
+                            <a href="<?php echo htmlspecialchars($waLink); ?>" target="_blank" class="text-white text-decoration-underline">Join Grup WA</a>
+                        <?php else: ?>
+                            <?php echo htmlspecialchars($kontakPanitia); ?>
+                        <?php endif; ?>
                     </small>
                     <br>
                     <small>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($namaLomba); ?>. All rights reserved.</small>
