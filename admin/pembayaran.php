@@ -59,6 +59,58 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
+// Proses tambah pembayaran manual
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add_pembayaran') {
+    $sekolah_id = $_POST['sekolah_id'];
+    $nominal = $_POST['nominal'];
+    $tanggal_bayar = $_POST['tanggal_bayar'];
+    $status_pembayaran = $_POST['status_pembayaran'];
+    $catatan = trim($_POST['catatan']);
+    $bukti = null;
+
+    if (empty($sekolah_id) || empty($nominal) || empty($tanggal_bayar)) {
+        $error = 'Sekolah, Nominal, dan Tanggal harus diisi!';
+    } else {
+        // Handle file upload if provided
+        if (isset($_FILES['bukti_pembayaran']) && $_FILES['bukti_pembayaran']['error'] == 0) {
+            $allowed_ext = ['jpg', 'jpeg', 'png', 'pdf'];
+            $file_name = $_FILES['bukti_pembayaran']['name'];
+            $file_size = $_FILES['bukti_pembayaran']['size'];
+            $file_tmp = $_FILES['bukti_pembayaran']['tmp_name'];
+            $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+            if (in_array($file_ext, $allowed_ext)) {
+                if ($file_size <= 2097152) { // 2MB
+                    $new_name = 'bukti_' . time() . '_' . $sekolah_id . '.' . $file_ext;
+                    $upload_path = '../uploads/bukti_pembayaran/';
+                    if (!is_dir($upload_path)) {
+                        mkdir($upload_path, 0777, true);
+                    }
+                    if (move_uploaded_file($file_tmp, $upload_path . $new_name)) {
+                        $bukti = $new_name;
+                    } else {
+                        $error = 'Gagal mengupload file bukti!';
+                    }
+                } else {
+                    $error = 'Ukuran file maksimal 2MB!';
+                }
+            } else {
+                $error = 'Ekstensi file tidak diizinkan! (Hanya JPG, JPEG, PNG, PDF)';
+            }
+        }
+
+        if (empty($error)) {
+            try {
+                $stmt = $pdo->prepare("INSERT INTO pembayaran (sekolah_id, nominal, tanggal_bayar, bukti_pembayaran, status_pembayaran, catatan) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$sekolah_id, $nominal, $tanggal_bayar, $bukti, $status_pembayaran, $catatan]);
+                $success = 'Pembayaran berhasil ditambahkan!';
+            } catch (PDOException $e) {
+                $error = 'Terjadi kesalahan dalam menyimpan data pembayaran!';
+            }
+        }
+    }
+}
+
 // Ambil data pembayaran dengan join sekolah
 try {
     $stmt = $pdo->query("
@@ -68,6 +120,10 @@ try {
         ORDER BY p.created_at DESC
     ");
     $pembayaran_list = $stmt->fetchAll();
+    
+    // Ambil daftar sekolah untuk form tambah pembayaran
+    $stmtSekolah = $pdo->query("SELECT id, nama_sekolah FROM sekolah ORDER BY nama_sekolah ASC");
+    $sekolah_list = $stmtSekolah->fetchAll();
 } catch (PDOException $e) {
     $error = "Terjadi kesalahan dalam mengambil data!";
 }
@@ -128,10 +184,13 @@ try {
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3">
                         <h2><i class="fas fa-credit-card me-2"></i>Data Pembayaran</h2>
                         <div class="mt-2 mt-md-0">
+                            <button class="btn btn-primary me-2 mb-2 mb-md-0" data-bs-toggle="modal" data-bs-target="#addPembayaranModal">
+                                <i class="fas fa-plus me-2"></i>Tambah Pembayaran
+                            </button>
                             <a href="export_pembayaran.php" class="btn btn-success me-2 mb-2 mb-md-0">
                                 <i class="fas fa-file-excel me-2"></i>Export Excel
                             </a>
-                            <button id="printBtn" class="btn btn-info">
+                            <button id="printBtn" class="btn btn-info text-white">
                                 <i class="fas fa-print me-2"></i>Print
                             </button>
                         </div>
@@ -383,6 +442,65 @@ try {
                         </div>
                     </div>
                     <?php echo $modalsHtml; ?>
+
+                    <!-- Modal Tambah Pembayaran -->
+                    <div class="modal fade" id="addPembayaranModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Tambah Pembayaran</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" enctype="multipart/form-data">
+                                    <?php echo getCsrfInput(); ?>
+                                    <input type="hidden" name="action" value="add_pembayaran">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Sekolah <span class="text-danger">*</span></label>
+                                            <select class="form-select" name="sekolah_id" required>
+                                                <option value="">Pilih Sekolah</option>
+                                                <?php foreach ($sekolah_list as $sekolah): ?>
+                                                    <option value="<?php echo $sekolah['id']; ?>"><?php echo htmlspecialchars($sekolah['nama_sekolah']); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Nominal Pembayaran <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">Rp</span>
+                                                <input type="number" class="form-control" name="nominal" required min="0">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Tanggal Pembayaran <span class="text-danger">*</span></label>
+                                            <input type="datetime-local" class="form-control" name="tanggal_bayar" required value="<?php echo date('Y-m-d\TH:i'); ?>">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Status Pembayaran</label>
+                                            <select class="form-select" name="status_pembayaran">
+                                                <option value="Lunas">Lunas</option>
+                                                <option value="Pending">Pending</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Catatan</label>
+                                            <textarea class="form-control" name="catatan" rows="2" placeholder="Catatan opsional..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Bukti Pembayaran (Opsional)</label>
+                                            <input type="file" class="form-control" name="bukti_pembayaran" accept="image/jpeg,image/png,application/pdf">
+                                            <small class="text-muted">Maksimal 2MB. Format: JPG, PNG, PDF.</small>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                        <button type="submit" class="btn btn-primary">Simpan</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
