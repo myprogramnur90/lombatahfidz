@@ -87,13 +87,13 @@ ob_start();
         font-size: 1.8rem;
     }
     .stat-info { text-align: right; }
-    .stat-number { font-size: 1.8rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.2rem; }
-    .stat-label { font-size: 0.9rem; color: #6c757d; font-weight: 600; text-transform: uppercase; }
+    .stat-number { font-size: 2rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.2rem; color: #2b2b2b; }
+    .stat-label { font-size: 0.9rem; color: #555555; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    .bg-light-primary { background: rgba(102, 126, 234, 0.1); color: #667eea; }
-    .bg-light-success { background: rgba(46, 204, 113, 0.1); color: #2ecc71; }
-    .bg-light-warning { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
-    .bg-light-info { background: rgba(52, 152, 219, 0.1); color: #3498db; }
+    .bg-light-primary { background: rgba(102, 126, 234, 0.15); color: #4b61d1; }
+    .bg-light-success { background: rgba(46, 204, 113, 0.15); color: #27ae60; }
+    .bg-light-warning { background: rgba(241, 196, 15, 0.2); color: #d4ac0d; }
+    .bg-light-info { background: rgba(52, 152, 219, 0.15); color: #2980b9; }
     
     .custom-card {
         border: none;
@@ -105,8 +105,9 @@ ob_start();
         background: transparent;
         border-bottom: 1px solid rgba(0,0,0,0.05);
         padding: 1.2rem 1.5rem;
-        font-weight: 700;
-        font-size: 1.1rem;
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: #2b2b2b;
     }
     .post-card {
         border-radius: 12px;
@@ -122,7 +123,7 @@ ob_start();
         <p class="mb-0 mt-1 opacity-75">Panel pendaftaran dan informasi musabaqoh</p>
     </div>
     <div class="mt-3 mt-md-0">
-        <span class="badge bg-white text-dark py-2 px-3 rounded-pill shadow-sm">
+        <span class="badge bg-white text-dark py-2 px-3 rounded-pill shadow-sm" style="font-size: 0.95rem;">
             <i class="fas fa-user-circle me-1"></i> <?php echo htmlspecialchars($_SESSION['nama_sekolah'] ?? 'Panel Sekolah'); ?>
         </span>
     </div>
@@ -137,7 +138,7 @@ ob_start();
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-number text-primary"><?php echo $total_peserta; ?></div>
+                    <div class="stat-number"><?php echo $total_peserta; ?></div>
                     <div class="stat-label">Total Peserta</div>
                 </div>
             </div>
@@ -150,7 +151,7 @@ ob_start();
                     <i class="fas fa-credit-card"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-number text-info fs-4"><?php echo $status_pembayaran ? ucfirst(htmlspecialchars($status_pembayaran['status_pembayaran'])) : 'Belum'; ?></div>
+                    <div class="stat-number fs-4"><?php echo $status_pembayaran ? ucfirst(htmlspecialchars($status_pembayaran['status_pembayaran'])) : 'Belum'; ?></div>
                     <div class="stat-label">Pembayaran</div>
                 </div>
             </div>
@@ -163,7 +164,7 @@ ob_start();
                     <i class="fas fa-file-alt"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-number text-success fs-4"><?php echo $status_berka ? ucfirst(htmlspecialchars($status_berka['status_dokumen'])) : 'Belum'; ?></div>
+                    <div class="stat-number fs-4"><?php echo $status_berka ? ucfirst(htmlspecialchars($status_berka['status_dokumen'])) : 'Belum'; ?></div>
                     <div class="stat-label">Status Berkas</div>
                 </div>
             </div>
@@ -176,7 +177,7 @@ ob_start();
                     <i class="fas fa-calendar-alt"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-number text-warning fs-5"><?php echo date('d/m/Y', strtotime(getPengaturan('tanggal_penutupan'))); ?></div>
+                    <div class="stat-number fs-5"><?php echo date('d/m/Y', strtotime(getPengaturan('tanggal_penutupan'))); ?></div>
                     <div class="stat-label">Batas Daftar</div>
                 </div>
             </div>
@@ -190,26 +191,26 @@ ob_start();
         <div class="card custom-card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-chart-pie me-2 text-primary"></i>Status Peserta</span>
-                <a href="peserta.php" class="btn btn-sm btn-outline-primary rounded-pill">Lihat Data</a>
+                <a href="peserta.php" class="btn btn-sm btn-outline-primary rounded-pill fw-bold">Lihat Data</a>
             </div>
             <div class="card-body">
                 <?php if (!empty($status_peserta)): ?>
                     <div class="list-group list-group-flush">
                     <?php foreach ($status_peserta as $status): ?>
                         <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center fw-bold text-dark">
                                 <i class="fas fa-circle text-primary me-2" style="font-size: 8px;"></i>
                                 <?php echo ucfirst(htmlspecialchars($status['status'])); ?>
                             </div>
-                            <span class="badge bg-primary rounded-pill px-3"><?php echo $status['jumlah']; ?></span>
+                            <span class="badge bg-primary rounded-pill px-3 fs-6"><?php echo $status['jumlah']; ?></span>
                         </div>
                     <?php endforeach; ?>
                     </div>
                 <?php else: ?>
                     <div class="text-center py-4">
-                        <div class="mb-3"><i class="fas fa-user-times fa-3x text-muted opacity-50"></i></div>
-                        <p class="text-muted mb-0">Belum ada peserta terdaftar</p>
-                        <a href="daftar.php" class="btn btn-primary btn-sm mt-3 rounded-pill px-4"><i class="fas fa-plus me-1"></i> Daftar Sekarang</a>
+                        <div class="mb-3"><i class="fas fa-user-times fa-3x text-secondary opacity-50"></i></div>
+                        <p class="text-secondary fw-bold mb-0">Belum ada peserta terdaftar</p>
+                        <a href="daftar.php" class="btn btn-primary btn-sm mt-3 rounded-pill px-4 fw-bold"><i class="fas fa-plus me-1"></i> Daftar Sekarang</a>
                     </div>
                 <?php endif; ?>
             </div>
@@ -223,18 +224,18 @@ ob_start();
             <div class="card-body">
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item px-0 py-3">
-                        <small class="text-muted d-block text-uppercase fw-bold mb-1">Nama Lomba</small>
+                        <small class="text-secondary d-block text-uppercase fw-bold mb-1" style="letter-spacing: 0.5px;">Nama Lomba</small>
                         <div class="fw-bold text-dark fs-5"><?php echo htmlspecialchars(getPengaturan('nama_lomba')); ?></div>
                     </li>
                     <li class="list-group-item px-0 py-3">
-                        <small class="text-muted d-block text-uppercase fw-bold mb-1">Biaya Pendaftaran</small>
-                        <div class="fw-bold text-success fs-5">Rp <?php echo number_format(getPengaturan('biaya_pendaftaran'), 0, ',', '.'); ?></div>
+                        <small class="text-secondary d-block text-uppercase fw-bold mb-1" style="letter-spacing: 0.5px;">Biaya Pendaftaran</small>
+                        <div class="fw-bold text-dark fs-5">Rp <?php echo number_format(getPengaturan('biaya_pendaftaran'), 0, ',', '.'); ?></div>
                     </li>
                     <li class="list-group-item px-0 py-3 border-0">
-                        <small class="text-muted d-block text-uppercase fw-bold mb-1">Kontak Panitia</small>
+                        <small class="text-secondary d-block text-uppercase fw-bold mb-1" style="letter-spacing: 0.5px;">Kontak Panitia</small>
                         <div class="d-flex align-items-center">
                             <i class="fab fa-whatsapp text-success fs-4 me-2"></i>
-                            <span class="fw-bold text-dark"><?php echo htmlspecialchars(getPengaturan('kontak_panitia')); ?></span>
+                            <span class="fw-bold text-dark fs-5"><?php echo htmlspecialchars(getPengaturan('kontak_panitia')); ?></span>
                         </div>
                     </li>
                 </ul>
