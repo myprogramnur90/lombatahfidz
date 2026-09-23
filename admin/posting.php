@@ -441,7 +441,35 @@ if (isset($_SESSION['error'])) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+    <style>
+        .ck-editor__editable_inline {
+            min-height: 200px;
+        }
+    </style>
     <script>
+        let addEditor;
+        let editEditor;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            ClassicEditor
+                .create( document.querySelector( '#konten' ) )
+                .then( editor => { addEditor = editor; } )
+                .catch( error => { console.error( error ); } );
+
+            ClassicEditor
+                .create( document.querySelector( '#edit_konten' ) )
+                .then( editor => { editEditor = editor; } )
+                .catch( error => { console.error( error ); } );
+
+            // Fix Bootstrap modal focus trap for CKEditor link dialog
+            document.addEventListener('focusin', (e) => {
+                if (e.target.closest('.ck-body-wrapper')) {
+                    e.stopImmediatePropagation();
+                }
+            });
+        });
+        
         // Ensure menu links work properly
         document.addEventListener('DOMContentLoaded', function() {
             // Ensure all nav links are clickable
@@ -503,7 +531,11 @@ if (isset($_SESSION['error'])) {
             document.getElementById('edit_sekolah_id').value = post.sekolah_id || '';
             document.getElementById('edit_judul').value = post.judul;
             document.getElementById('edit_jenis_post').value = post.jenis_post;
-            document.getElementById('edit_konten').value = post.konten;
+            if (editEditor) {
+                editEditor.setData(post.konten);
+            } else {
+                document.getElementById('edit_konten').value = post.konten;
+            }
             document.getElementById('edit_status').value = post.status;
             
             // Toggle sekolah field based on target audience
