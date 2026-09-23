@@ -351,7 +351,9 @@ try {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php if (!empty($peserta_list)): ?>
+                                        <?php 
+                                        $modalsHtml = '';
+                                        if (!empty($peserta_list)): ?>
                                             <?php foreach ($peserta_list as $index => $peserta): ?>
                                                 <tr>
                                                     <td><?php echo $offset + $index + 1; ?></td>
@@ -403,6 +405,7 @@ try {
                                                         </button>
                                                     </td>
                                                 </tr>
+                                                <?php ob_start(); ?>
                                                 
                                                 <!-- Modal Detail -->
                                                 <div class="modal fade" id="detailModal<?php echo $peserta['id']; ?>" tabindex="-1">
@@ -610,6 +613,7 @@ try {
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <?php $modalsHtml .= ob_get_clean(); ?>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
@@ -622,6 +626,8 @@ try {
                         </div>
                     </div>
                     
+                    <?php echo $modalsHtml; ?>
+
                     <!-- Pagination -->
                     <?php if ($total_pages > 1): ?>
                         <nav aria-label="Page navigation" class="mt-4">

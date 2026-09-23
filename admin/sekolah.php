@@ -180,7 +180,9 @@ try {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php if (!empty($sekolah_list)): ?>
+                                        <?php 
+                                        $modalsHtml = '';
+                                        if (!empty($sekolah_list)): ?>
                                             <?php foreach ($sekolah_list as $index => $sekolah): ?>
                                                 <tr>
                                                     <td><?php echo $index + 1; ?></td>
@@ -205,6 +207,7 @@ try {
                                                         </button>
                                                     </td>
                                                 </tr>
+                                                <?php ob_start(); ?>
                                                 
                                                 <!-- Modal Detail Sekolah -->
                                                 <div class="modal fade" id="detailSekolahModal<?php echo $sekolah['id']; ?>" tabindex="-1">
@@ -286,6 +289,7 @@ try {
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <?php $modalsHtml .= ob_get_clean(); ?>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
@@ -301,6 +305,9 @@ try {
             </div>
         </div>
     </div>
+    
+    <!-- Render Captured Modals -->
+    <?php echo $modalsHtml; ?>
 
     <!-- Modal Tambah Sekolah -->
     <div class="modal fade" id="addSekolahModal" tabindex="-1">
