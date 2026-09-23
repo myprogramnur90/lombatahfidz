@@ -81,7 +81,7 @@ ob_start();
                 </div>
                 
                 <div class="post-content">
-                    <?php echo nl2br(htmlspecialchars($post['konten'])); ?>
+                    <?php echo $post['konten']; ?>
                 </div>
             </div>
         </div>

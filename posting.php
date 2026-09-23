@@ -169,7 +169,7 @@ switch ($post['jenis_post']) {
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="post-content-card">
-                    <?php echo nl2br(htmlspecialchars($post['konten'])); ?>
+                    <?php echo $post['konten']; ?>
                 </div>
 
                 <div class="text-center mt-4">
