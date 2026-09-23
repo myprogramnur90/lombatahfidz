@@ -16,18 +16,71 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     validateCsrfToken();
 }
 
-// Proses update status pembayaran
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_status') {
+// Proses update pembayaran
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_pembayaran') {
     $pembayaran_id = $_POST['pembayaran_id'];
-    $status = $_POST['status'];
+    $sekolah_id = $_POST['sekolah_id'];
+    $nominal = str_replace('.', '', $_POST['nominal']);
+    $tanggal_bayar = $_POST['tanggal_bayar'];
+    $status = $_POST['status_pembayaran'];
     $catatan = trim($_POST['catatan']);
     
-    try {
-        $stmt = $pdo->prepare("UPDATE pembayaran SET status_pembayaran = ?, catatan = ? WHERE id = ?");
-        $stmt->execute([$status, $catatan, $pembayaran_id]);
-        $success = 'Status pembayaran berhasil diupdate!';
-    } catch (PDOException $e) {
-        $error = 'Terjadi kesalahan dalam mengupdate data!';
+    if (empty($sekolah_id) || empty($nominal) || empty($tanggal_bayar)) {
+        $error = 'Sekolah, Nominal, dan Tanggal harus diisi!';
+    } else {
+        $bukti_update = "";
+        $params = [$sekolah_id, $nominal, $tanggal_bayar, $status, $catatan];
+
+        // Handle file upload if provided
+        if (isset($_FILES['bukti_pembayaran']) && $_FILES['bukti_pembayaran']['error'] == 0) {
+            $allowed_ext = ['jpg', 'jpeg', 'png', 'pdf'];
+            $file_name = $_FILES['bukti_pembayaran']['name'];
+            $file_size = $_FILES['bukti_pembayaran']['size'];
+            $file_tmp = $_FILES['bukti_pembayaran']['tmp_name'];
+            $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+            if (in_array($file_ext, $allowed_ext)) {
+                if ($file_size <= 2097152) { // 2MB
+                    $new_name = 'bukti_' . time() . '_' . $sekolah_id . '.' . $file_ext;
+                    $upload_path = '../uploads/bukti_pembayaran/';
+                    if (!is_dir($upload_path)) {
+                        mkdir($upload_path, 0777, true);
+                    }
+                    if (move_uploaded_file($file_tmp, $upload_path . $new_name)) {
+                        // Ambil file lama untuk dihapus
+                        $stmtOld = $pdo->prepare("SELECT bukti_pembayaran FROM pembayaran WHERE id = ?");
+                        $stmtOld->execute([$pembayaran_id]);
+                        $old_data = $stmtOld->fetch();
+                        if ($old_data && $old_data['bukti_pembayaran']) {
+                            $old_file = '../uploads/bukti_pembayaran/' . $old_data['bukti_pembayaran'];
+                            if (file_exists($old_file)) {
+                                unlink($old_file);
+                            }
+                        }
+
+                        $bukti_update = ", bukti_pembayaran = ?";
+                        $params[] = $new_name;
+                    } else {
+                        $error = 'Gagal mengupload file bukti!';
+                    }
+                } else {
+                    $error = 'Ukuran file maksimal 2MB!';
+                }
+            } else {
+                $error = 'Ekstensi file tidak diizinkan! (Hanya JPG, JPEG, PNG, PDF)';
+            }
+        }
+
+        if (empty($error)) {
+            $params[] = $pembayaran_id;
+            try {
+                $stmt = $pdo->prepare("UPDATE pembayaran SET sekolah_id = ?, nominal = ?, tanggal_bayar = ?, status_pembayaran = ?, catatan = ? $bukti_update WHERE id = ?");
+                $stmt->execute($params);
+                $success = 'Data pembayaran berhasil diupdate!';
+            } catch (PDOException $e) {
+                $error = 'Terjadi kesalahan dalam mengupdate data!';
+            }
+        }
     }
 }
 
@@ -296,7 +349,7 @@ try {
                                                         <?php endif; ?>
                                                     </td>
                                                     <td>
-                                                        <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#statusModal<?php echo $pembayaran['id']; ?>" title="Edit Status">
+                                                        <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#editModal<?php echo $pembayaran['id']; ?>" title="Edit Pembayaran">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
                                                         <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $pembayaran['id']; ?>" title="Hapus">
@@ -323,30 +376,44 @@ try {
                                                 </div>
                                                 <?php endif; ?>
 
-                                                <!-- Modal Update Status -->
-                                                <div class="modal fade" id="statusModal<?php echo $pembayaran['id']; ?>" tabindex="-1">
+                                                <!-- Modal Edit Pembayaran -->
+                                                <div class="modal fade" id="editModal<?php echo $pembayaran['id']; ?>" tabindex="-1">
                                                     <div class="modal-dialog">
                                                         <div class="modal-content">
                                                             <div class="modal-header">
-                                                                <h5 class="modal-title">Update Status Pembayaran</h5>
+                                                                <h5 class="modal-title">Edit Data Pembayaran</h5>
                                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                             </div>
-                                                            <form method="POST">
+                                                            <form method="POST" enctype="multipart/form-data">
                                                                 <?php echo getCsrfInput(); ?>
-                                                                <input type="hidden" name="action" value="update_status">
+                                                                <input type="hidden" name="action" value="update_pembayaran">
                                                                 <input type="hidden" name="pembayaran_id" value="<?php echo $pembayaran['id']; ?>">
                                                                 <div class="modal-body">
                                                                     <div class="mb-3">
-                                                                        <label class="form-label">Sekolah</label>
-                                                                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($pembayaran['nama_sekolah']); ?>" readonly>
+                                                                        <label class="form-label">Sekolah <span class="text-danger">*</span></label>
+                                                                        <select class="form-select" name="sekolah_id" required>
+                                                                            <option value="">Pilih Sekolah</option>
+                                                                            <?php foreach ($sekolah_list as $sekolah): ?>
+                                                                                <option value="<?php echo $sekolah['id']; ?>" <?php echo $sekolah['id'] == $pembayaran['sekolah_id'] ? 'selected' : ''; ?>>
+                                                                                    <?php echo htmlspecialchars($sekolah['nama_sekolah']); ?>
+                                                                                </option>
+                                                                            <?php endforeach; ?>
+                                                                        </select>
                                                                     </div>
                                                                     <div class="mb-3">
-                                                                        <label class="form-label">Nominal</label>
-                                                                        <input type="text" class="form-control" value="Rp <?php echo number_format($pembayaran['nominal']); ?>" readonly>
+                                                                        <label class="form-label">Nominal Pembayaran <span class="text-danger">*</span></label>
+                                                                        <div class="input-group">
+                                                                            <span class="input-group-text">Rp</span>
+                                                                            <input type="text" class="form-control format-rupiah" name="nominal" value="<?php echo number_format($pembayaran['nominal'], 0, '', '.'); ?>" required>
+                                                                        </div>
                                                                     </div>
                                                                     <div class="mb-3">
-                                                                        <label for="status" class="form-label">Status</label>
-                                                                        <select class="form-control" name="status" required>
+                                                                        <label class="form-label">Tanggal Pembayaran <span class="text-danger">*</span></label>
+                                                                        <input type="datetime-local" class="form-control" name="tanggal_bayar" required value="<?php echo date('Y-m-d\TH:i', strtotime($pembayaran['tanggal_bayar'])); ?>">
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="status" class="form-label">Status Pembayaran</label>
+                                                                        <select class="form-control" name="status_pembayaran" required>
                                                                             <option value="Pending" <?php echo $pembayaran['status_pembayaran'] == 'Pending' ? 'selected' : ''; ?>>Pending</option>
                                                                             <option value="Lunas" <?php echo $pembayaran['status_pembayaran'] == 'Lunas' ? 'selected' : ''; ?>>Lunas</option>
                                                                             <option value="Ditolak" <?php echo $pembayaran['status_pembayaran'] == 'Ditolak' ? 'selected' : ''; ?>>Ditolak</option>
@@ -354,7 +421,12 @@ try {
                                                                     </div>
                                                                     <div class="mb-3">
                                                                         <label for="catatan" class="form-label">Catatan</label>
-                                                                        <textarea class="form-control" name="catatan" rows="3"><?php echo htmlspecialchars($pembayaran['catatan']); ?></textarea>
+                                                                        <textarea class="form-control" name="catatan" rows="2"><?php echo htmlspecialchars($pembayaran['catatan']); ?></textarea>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Bukti Pembayaran (Opsional)</label>
+                                                                        <input type="file" class="form-control" name="bukti_pembayaran" accept="image/jpeg,image/png,application/pdf">
+                                                                        <small class="text-muted">Biarkan kosong jika tidak ingin mengubah bukti. Maksimal 2MB.</small>
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal-footer">
