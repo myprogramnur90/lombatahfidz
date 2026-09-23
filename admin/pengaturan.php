@@ -80,6 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     // Simpan path relatif ke database
                     $stmt = $pdo->prepare("UPDATE pengaturan SET nilai = ? WHERE nama_pengaturan = 'logo_sekolah'");
                     $stmt->execute(['uploads/logo/' . $namaFile]);
+                    
+                    // Buat/Update favicon.ico di root directory
+                    copy($targetPath, '../favicon.ico');
                 } else {
                     $error = 'Gagal mengupload logo!';
                 }
@@ -91,6 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $logoLama = getPengaturan('logo_sekolah');
             if ($logoLama && file_exists('../' . $logoLama)) {
                 unlink('../' . $logoLama);
+            }
+            if (file_exists('../favicon.ico')) {
+                unlink('../favicon.ico');
             }
             $stmt = $pdo->prepare("UPDATE pengaturan SET nilai = '' WHERE nama_pengaturan = 'logo_sekolah'");
             $stmt->execute();
