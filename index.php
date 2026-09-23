@@ -314,6 +314,16 @@ $posts = $stmtPosts->fetchAll();
             font-size: 0.8rem;
             color: #aaa;
         }
+        .btn-read-more {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-read-more:hover {
+            color: var(--primary-dark);
+            transform: translateX(3px);
+        }
         .no-posts {
             text-align: center;
             padding: 3rem;
@@ -469,8 +479,9 @@ $posts = $stmtPosts->fetchAll();
                                     <h5><a href="posting.php?id=<?php echo $post['id']; ?>"><?php echo htmlspecialchars($post['judul']); ?></a></h5>
                                     <p class="post-excerpt"><?php echo htmlspecialchars($excerpt); ?></p>
                                 </div>
-                                <div class="post-card-footer">
-                                    <i class="fas fa-clock me-1"></i> <?php echo $tglFormatted; ?>
+                                <div class="post-card-footer d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-clock me-1"></i> <?php echo $tglFormatted; ?></span>
+                                    <a href="posting.php?id=<?php echo $post['id']; ?>" class="btn-read-more">Baca Selengkapnya <i class="fas fa-arrow-right ms-1"></i></a>
                                 </div>
                             </div>
                         </div>
