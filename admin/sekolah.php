@@ -108,7 +108,9 @@ try {
         .card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); }
         .form-control { border-radius: 10px; border: 2px solid #e9ecef; padding: 12px 15px; transition: all 0.3s ease; }
         .form-control:focus { border-color: #667eea; box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25); }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; padding: 12px 30px; font-weight: 600; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; padding: 10px 25px; font-weight: 600; }
+        .btn-action { border-radius: 10px; padding: 10px 20px; font-weight: 500; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     </style>
 </head>
 <body>
@@ -121,19 +123,17 @@ try {
                     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h2><i class="fas fa-school me-2"></i>Kelola Sekolah</h2>
                         <div class="d-flex gap-2 flex-wrap">
-                            <div class="btn-group">
-                                <a href="export_sekolah.php" class="btn btn-success btn-sm" title="Export Excel">
-                                    <i class="fas fa-file-excel me-1"></i>Export Excel
-                                </a>
-                                <a href="export_sekolah_pdf.php" class="btn btn-danger btn-sm" title="Export PDF">
-                                    <i class="fas fa-file-pdf me-1"></i>Export PDF
-                                </a>
-                            </div>
-                            <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#importSekolahModal">
-                                <i class="fas fa-file-import me-1"></i>Import Excel
+                            <a href="export_sekolah.php" class="btn btn-success btn-action" title="Export Excel">
+                                <i class="fas fa-file-excel me-2"></i>Export Excel
+                            </a>
+                            <a href="export_sekolah_pdf.php" class="btn btn-danger btn-action" title="Export PDF">
+                                <i class="fas fa-file-pdf me-2"></i>Export PDF
+                            </a>
+                            <button class="btn btn-info text-white btn-action" data-bs-toggle="modal" data-bs-target="#importSekolahModal">
+                                <i class="fas fa-file-import me-2"></i>Import Excel
                             </button>
-                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSekolahModal">
-                                <i class="fas fa-plus me-1"></i>Tambah Sekolah
+                            <button class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#addSekolahModal">
+                                <i class="fas fa-plus me-2"></i>Tambah Sekolah
                             </button>
                         </div>
                     </div>
