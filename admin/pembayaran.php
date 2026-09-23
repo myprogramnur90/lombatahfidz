@@ -213,7 +213,9 @@ try {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php if (!empty($pembayaran_list)): ?>
+                                        <?php 
+                                        $modalsHtml = '';
+                                        if (!empty($pembayaran_list)): ?>
                                             <?php foreach ($pembayaran_list as $index => $pembayaran): ?>
                                                 <tr>
                                                     <td><?php echo $index + 1; ?></td>
@@ -227,8 +229,8 @@ try {
                                                     <td><?php echo date('d/m/Y H:i', strtotime($pembayaran['tanggal_bayar'])); ?></td>
                                                     <td>
                                                         <?php if ($pembayaran['bukti_pembayaran']): ?>
-                                                            <a href="../uploads/bukti_pembayaran/<?php echo $pembayaran['bukti_pembayaran']; ?>" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                                <i class="fas fa-eye"></i>
+                                                            <a href="../uploads/bukti_pembayaran/<?php echo $pembayaran['bukti_pembayaran']; ?>" target="_blank" title="Lihat Bukti">
+                                                                <img src="../uploads/bukti_pembayaran/<?php echo $pembayaran['bukti_pembayaran']; ?>" alt="Bukti" style="max-height: 50px; max-width: 50px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                             </a>
                                                         <?php else: ?>
                                                             <span class="text-muted">-</span>
@@ -243,7 +245,7 @@ try {
                                                         </button>
                                                     </td>
                                                 </tr>
-                                                
+                                                <?php ob_start(); ?>
                                                 <!-- Modal Update Status -->
                                                 <div class="modal fade" id="statusModal<?php echo $pembayaran['id']; ?>" tabindex="-1">
                                                     <div class="modal-dialog">
@@ -350,6 +352,7 @@ try {
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <?php $modalsHtml .= ob_get_clean(); ?>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
@@ -361,6 +364,7 @@ try {
                             </div>
                         </div>
                     </div>
+                    <?php echo $modalsHtml; ?>
                 </div>
             </div>
         </div>
