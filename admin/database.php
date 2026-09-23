@@ -31,8 +31,8 @@ function verifyAdminPassword($pdo, $adminId, $password) {
     return false;
 }
 
-// Cek password untuk aksi sensitif (backup, restore, delete_backup)
-$sensitiveActions = ['backup', 'restore', 'delete_backup'];
+// Cek password untuk aksi sensitif (backup, restore, delete_backup, empty_table)
+$sensitiveActions = ['backup', 'restore', 'delete_backup', 'empty_table'];
 if (isset($_POST['action']) && in_array($_POST['action'], $sensitiveActions)) {
     if (empty($_POST['admin_password'])) {
         $error = 'Password admin wajib diisi untuk melakukan aksi ini!';
@@ -175,6 +175,27 @@ if (isset($_GET['download'])) {
 }
 
 // =============================================
+// AKSI: KOSONGKAN TABEL
+// =============================================
+if (isset($_POST['action']) && $_POST['action'] === 'empty_table') {
+    $tableName = $_POST['table_name'] ?? '';
+    
+    // Validasi nama tabel (hanya izinkan alfanumerik dan underscore)
+    if (!empty($tableName) && preg_match('/^[a-zA-Z0-9_]+$/', $tableName)) {
+        try {
+            $pdo->exec("SET FOREIGN_KEY_CHECKS=0");
+            $pdo->exec("TRUNCATE TABLE `$tableName`");
+            $pdo->exec("SET FOREIGN_KEY_CHECKS=1");
+            $success = "Isi tabel <strong>" . htmlspecialchars($tableName) . "</strong> berhasil dikosongkan.";
+        } catch (PDOException $e) {
+            $error = "Gagal mengosongkan tabel: " . $e->getMessage();
+        }
+    } else {
+        $error = "Pilih tabel yang valid!";
+    }
+}
+
+// =============================================
 // AKSI: UPDATE DATABASE (Jalankan semua update script)
 // =============================================
 if (isset($_POST['action']) && $_POST['action'] === 'update_db') {
@@ -231,14 +252,17 @@ if (is_dir($backupDir)) {
 
 // Ambil info database
 $dbInfo = [];
+$tableList = [];
 try {
     $stmt = $pdo->query("SHOW TABLES");
-    $dbInfo['tables'] = $stmt->rowCount();
+    while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+        $tableList[] = $row[0];
+    }
+    $dbInfo['tables'] = count($tableList);
     
     $totalRows = 0;
-    $stmt = $pdo->query("SHOW TABLES");
-    while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
-        $countStmt = $pdo->query("SELECT COUNT(*) FROM `{$row[0]}`");
+    foreach ($tableList as $tableName) {
+        $countStmt = $pdo->query("SELECT COUNT(*) FROM `$tableName`");
         $totalRows += $countStmt->fetchColumn();
     }
     $dbInfo['rows'] = $totalRows;
@@ -369,18 +393,18 @@ try {
 
                     <div class="row g-4">
                         <!-- BACKUP -->
-                        <div class="col-md-6">
-                            <div class="card">
+                        <div class="col-md-4">
+                            <div class="card h-100">
                                 <div class="card-header">
                                     <h5><i class="fas fa-download me-2 text-success"></i>Backup Database</h5>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body d-flex flex-column">
                                     <p class="text-muted">Buat salinan database saat ini untuk cadangan. File backup berformat .sql dan bisa digunakan untuk memulihkan data.</p>
-                                    <form method="POST" id="formBackup">
+                                    <form method="POST" id="formBackup" class="mt-auto">
                                         <input type="hidden" name="action" value="backup">
                                         <input type="hidden" name="admin_password" class="admin-password-field" value="">
                                         <button type="button" class="btn btn-success btn-lg w-100 btn-need-password" data-form="formBackup">
-                                            <i class="fas fa-download me-2"></i>Buat Backup Sekarang
+                                            <i class="fas fa-download me-2"></i>Buat Backup
                                         </button>
                                     </form>
                                 </div>
@@ -388,14 +412,14 @@ try {
                         </div>
 
                         <!-- RESTORE -->
-                        <div class="col-md-6">
-                            <div class="card">
+                        <div class="col-md-4">
+                            <div class="card h-100">
                                 <div class="card-header">
                                     <h5><i class="fas fa-upload me-2 text-warning"></i>Restore Database</h5>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body d-flex flex-column">
                                     <p class="text-muted">Upload file .sql untuk memulihkan database ke kondisi sebelumnya.</p>
-                                    <form method="POST" enctype="multipart/form-data" id="formRestore">
+                                    <form method="POST" enctype="multipart/form-data" id="formRestore" class="mt-auto">
                                         <input type="hidden" name="action" value="restore">
                                         <input type="hidden" name="admin_password" class="admin-password-field" value="">
                                         <div class="mb-3">
@@ -403,6 +427,33 @@ try {
                                         </div>
                                         <button type="button" class="btn btn-warning btn-lg w-100 btn-need-password" data-form="formRestore" data-confirm="⚠️ PERINGATAN: Restore akan MENIMPA data yang ada saat ini. Pastikan Anda sudah backup terlebih dahulu. Lanjutkan?">
                                             <i class="fas fa-upload me-2"></i>Restore dari File
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KOSONGKAN TABEL -->
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-eraser me-2 text-danger"></i>Kosongkan Tabel</h5>
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <p class="text-muted">Hapus seluruh isi data pada tabel yang dipilih. Data yang dihapus tidak dapat dikembalikan kecuali dari backup.</p>
+                                    <form method="POST" id="formEmptyTable" class="mt-auto">
+                                        <input type="hidden" name="action" value="empty_table">
+                                        <input type="hidden" name="admin_password" class="admin-password-field" value="">
+                                        <div class="mb-3">
+                                            <select class="form-select form-control" name="table_name" required>
+                                                <option value="" disabled selected>-- Pilih Tabel --</option>
+                                                <?php foreach ($tableList as $t): ?>
+                                                    <option value="<?php echo htmlspecialchars($t); ?>"><?php echo htmlspecialchars($t); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn btn-danger btn-lg w-100 btn-need-password" data-form="formEmptyTable" data-confirm="⚠️ PERINGATAN: Seluruh isi data pada tabel yang dipilih akan dihapus permanen. Lanjutkan?">
+                                            <i class="fas fa-trash-alt me-2"></i>Kosongkan Tabel
                                         </button>
                                     </form>
                                 </div>
