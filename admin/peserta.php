@@ -75,6 +75,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
+// Proses tambah peserta
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add') {
+    $sekolah_id = $_POST['sekolah_id'];
+    $nama_lengkap = trim($_POST['nama_lengkap']);
+    $nisn = trim($_POST['nisn']);
+    $tempat_lahir = trim($_POST['tempat_lahir']);
+    $tanggal_lahir = $_POST['tanggal_lahir'];
+    $jenis_kelamin = $_POST['jenis_kelamin'];
+    $kelas = trim($_POST['kelas']);
+    $no_hp = trim($_POST['no_hp']);
+    $alamat = trim($_POST['alamat']);
+    
+    if (empty($sekolah_id) || empty($nama_lengkap) || empty($nisn)) {
+        $error = 'Sekolah, Nama Lengkap, dan NISN harus diisi!';
+    } else {
+        try {
+            $stmt = $pdo->prepare("SELECT id FROM peserta WHERE nisn = ?");
+            $stmt->execute([$nisn]);
+            if ($stmt->fetch()) {
+                $error = 'NISN sudah terdaftar!';
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO peserta (sekolah_id, nama_lengkap, nisn, tempat_lahir, tanggal_lahir, jenis_kelamin, kelas, no_hp, alamat, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')");
+                $stmt->execute([$sekolah_id, $nama_lengkap, $nisn, $tempat_lahir, $tanggal_lahir, $jenis_kelamin, $kelas, $no_hp, $alamat]);
+                $success = 'Peserta berhasil ditambahkan!';
+            }
+        } catch (PDOException $e) {
+            $error = 'Terjadi kesalahan dalam menambahkan data!';
+        }
+    }
+}
+
+// Cek flash message dari import
+if (isset($_SESSION['import_success'])) {
+    $success = $_SESSION['import_success'];
+    unset($_SESSION['import_success']);
+}
+if (isset($_SESSION['import_error'])) {
+    $error = $_SESSION['import_error'];
+    unset($_SESSION['import_error']);
+}
+
 // Filter dan pagination
 $filter_sekolah = isset($_GET['sekolah']) ? $_GET['sekolah'] : '';
 $filter_status = isset($_GET['status']) ? $_GET['status'] : '';
@@ -179,7 +220,9 @@ try {
     <style>
         body { background-color: #f8f9fa; }
         .card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; padding: 8px 20px; font-weight: 600; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; padding: 10px 25px; font-weight: 600; }
+        .btn-action { border-radius: 10px; padding: 10px 20px; font-weight: 500; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     </style>
 </head>
 <body>
@@ -189,11 +232,22 @@ try {
             
             <div class="col-md-9 col-lg-10">
                 <div class="p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h2><i class="fas fa-users me-2"></i>Data Peserta</h2>
-                        <a href="export_peserta.php" class="btn btn-success">
-                            <i class="fas fa-download me-2"></i>Export Excel
-                        </a>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="export_peserta.php" class="btn btn-success btn-action" title="Export Excel">
+                                <i class="fas fa-file-excel me-2"></i>Export Excel
+                            </a>
+                            <a href="export_peserta_pdf.php" class="btn btn-danger btn-action" title="Export PDF">
+                                <i class="fas fa-file-pdf me-2"></i>Export PDF
+                            </a>
+                            <button class="btn btn-info text-white btn-action" data-bs-toggle="modal" data-bs-target="#importPesertaModal">
+                                <i class="fas fa-file-import me-2"></i>Import Excel
+                            </button>
+                            <button class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#addPesertaModal">
+                                <i class="fas fa-plus me-2"></i>Tambah Peserta
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Filter Form -->
@@ -638,6 +692,124 @@ try {
                         </nav>
                     <?php endif; ?>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Peserta -->
+    <div class="modal fade" id="addPesertaModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Tambah Peserta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="sekolah_id" class="form-label">Sekolah <span class="text-danger">*</span></label>
+                                <select class="form-control" id="sekolah_id" name="sekolah_id" required>
+                                    <option value="">Pilih Sekolah...</option>
+                                    <?php if (!empty($sekolah_list)): ?>
+                                        <?php foreach ($sekolah_list as $sekolah): ?>
+                                            <option value="<?php echo $sekolah['id']; ?>">
+                                                <?php echo htmlspecialchars($sekolah['nama_sekolah']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nama_lengkap" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nama_lengkap" name="nama_lengkap" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nisn" class="form-label">NISN <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nisn" name="nisn" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="kelas" class="form-label">Kelas</label>
+                                <input type="text" class="form-control" id="kelas" name="kelas">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="tempat_lahir" class="form-label">Tempat Lahir</label>
+                                <input type="text" class="form-control" id="tempat_lahir" name="tempat_lahir">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="tanggal_lahir" class="form-label">Tanggal Lahir</label>
+                                <input type="date" class="form-control" id="tanggal_lahir" name="tanggal_lahir">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="jenis_kelamin" class="form-label">Jenis Kelamin</label>
+                                <select class="form-control" id="jenis_kelamin" name="jenis_kelamin">
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="no_hp" class="form-label">No HP</label>
+                                <input type="tel" class="form-control" id="no_hp" name="no_hp">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="alamat" class="form-label">Alamat</label>
+                            <textarea class="form-control" id="alamat" name="alamat" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import Peserta -->
+    <div class="modal fade" id="importPesertaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #00b4db, #0083b0); color: white; border: none;">
+                    <h5 class="modal-title"><i class="fas fa-file-import me-2"></i>Import Data Peserta</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="import_peserta.php" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="alert alert-info py-2 mb-3" style="font-size: 0.85rem;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Format kolom yang diharapkan (CSV):</strong><br>
+                            Nama Lengkap, NISN, Username Sekolah, Tempat Lahir, Tanggal Lahir (YYYY-MM-DD), Jenis Kelamin (L/P), Kelas, No HP, Alamat
+                        </div>
+                        <div class="mb-3">
+                            <label for="import_file" class="form-label fw-bold">Pilih File CSV</label>
+                            <input type="file" class="form-control" id="import_file" name="file_import" accept=".csv" required>
+                            <small class="text-muted">Format: .csv (maks 5MB)</small>
+                        </div>
+                        <div class="alert alert-warning py-2 mb-0" style="font-size: 0.82rem;">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>Catatan:</strong>
+                            <ul class="mb-0 ps-3 mt-1">
+                                <li>Baris pertama harus berisi header kolom</li>
+                                <li>Pastikan Username Sekolah benar</li>
+                                <li>NISN yang sudah ada akan dilewati</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-info text-white">
+                            <i class="fas fa-upload me-1"></i>Import Sekarang
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
