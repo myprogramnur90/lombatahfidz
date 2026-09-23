@@ -455,8 +455,10 @@ $posts = $stmtPosts->fetchAll();
                         $tglPost = new DateTime($post['created_at']);
                         $tglFormatted = $tglPost->format('d') . ' ' . $bulan[(int)$tglPost->format('m')] . ' ' . $tglPost->format('Y');
                         // Potong konten untuk excerpt
-                        $excerpt = strip_tags($post['konten']);
-                        $excerpt = strlen($excerpt) > 150 ? substr($excerpt, 0, 150) . '...' : $excerpt;
+                        $raw_text = strip_tags(html_entity_decode($post['konten'], ENT_QUOTES, 'UTF-8'));
+                        // Hilangkan extra whitespace dan non-breaking space yang mungkin masih ada
+                        $raw_text = preg_replace('/\s+/', ' ', str_replace('&nbsp;', ' ', $raw_text));
+                        $excerpt = mb_strlen($raw_text) > 150 ? mb_substr($raw_text, 0, 150) . '...' : $raw_text;
                         ?>
                         <div class="col-md-6 col-lg-4">
                             <div class="post-card">
