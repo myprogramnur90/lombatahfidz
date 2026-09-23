@@ -19,6 +19,7 @@ header('Cache-Control: max-age=0');
 ?>
 <html>
 <head>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <style>
         body {

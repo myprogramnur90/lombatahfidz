@@ -150,7 +150,8 @@ ob_start();
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Data Peserta - <?php echo htmlspecialchars($_SESSION['nama_sekolah'] ?? 'Sekolah'); ?></title>
+                    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Data Peserta - <?php echo htmlspecialchars($_SESSION['nama_sekolah'] ?? 'Sekolah'); ?></title>
                     <style>
                         body { font-family: Arial, sans-serif; margin: 20px; }
                         .table { width: 100%; border-collapse: collapse; margin-top: 20px; }

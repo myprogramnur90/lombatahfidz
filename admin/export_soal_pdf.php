@@ -40,6 +40,7 @@ try {
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <meta charset="UTF-8">
     <title>Export Soal Musabaqoh - PDF</title>
     <style>

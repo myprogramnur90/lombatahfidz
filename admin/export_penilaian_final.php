@@ -43,6 +43,7 @@ header('Cache-Control: max-age=0');
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <meta charset="UTF-8">
     <title>Laporan Penilaian Final</title>
     <style>
