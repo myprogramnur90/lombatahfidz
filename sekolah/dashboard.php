@@ -63,13 +63,13 @@ ob_start();
     .stat-card {
         border: none;
         border-radius: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         overflow: hidden;
     }
     .stat-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
     .stat-card .card-body {
         padding: 1.5rem;
@@ -87,13 +87,13 @@ ob_start();
         font-size: 1.8rem;
     }
     .stat-info { text-align: right; }
-    .stat-number { font-size: 2rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.2rem; color: #2b2b2b; }
-    .stat-label { font-size: 0.9rem; color: #555555; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-number { font-size: 2rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.2rem; color: #ffffff !important; }
+    .stat-label { font-size: 0.9rem; color: rgba(255,255,255,0.8) !important; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    .bg-light-primary { background: rgba(102, 126, 234, 0.15); color: #4b61d1; }
-    .bg-light-success { background: rgba(46, 204, 113, 0.15); color: #27ae60; }
-    .bg-light-warning { background: rgba(241, 196, 15, 0.2); color: #d4ac0d; }
-    .bg-light-info { background: rgba(52, 152, 219, 0.15); color: #2980b9; }
+    .bg-light-primary, .bg-light-success, .bg-light-warning, .bg-light-info { 
+        background: rgba(255, 255, 255, 0.2) !important; 
+        color: #ffffff !important; 
+    }
     
     .custom-card {
         border: none;
@@ -151,7 +151,7 @@ ob_start();
                     <i class="fas fa-credit-card"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-number fs-4"><?php echo $status_pembayaran ? ucfirst(htmlspecialchars($status_pembayaran['status_pembayaran'])) : 'Belum'; ?></div>
+                    <div class="stat-number"><?php echo $status_pembayaran ? ucfirst(htmlspecialchars($status_pembayaran['status_pembayaran'])) : 'Belum'; ?></div>
                     <div class="stat-label">Pembayaran</div>
                 </div>
             </div>
@@ -164,7 +164,7 @@ ob_start();
                     <i class="fas fa-file-alt"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-number fs-4"><?php echo $status_berka ? ucfirst(htmlspecialchars($status_berka['status_dokumen'])) : 'Belum'; ?></div>
+                    <div class="stat-number"><?php echo $status_berka ? ucfirst(htmlspecialchars($status_berka['status_dokumen'])) : 'Belum'; ?></div>
                     <div class="stat-label">Status Berkas</div>
                 </div>
             </div>
@@ -177,7 +177,7 @@ ob_start();
                     <i class="fas fa-calendar-alt"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-number fs-5"><?php echo date('d/m/Y', strtotime(getPengaturan('tanggal_penutupan'))); ?></div>
+                    <div class="stat-number" style="font-size: 1.5rem;"><?php echo date('d/m/Y', strtotime(getPengaturan('tanggal_penutupan'))); ?></div>
                     <div class="stat-label">Batas Daftar</div>
                 </div>
             </div>
