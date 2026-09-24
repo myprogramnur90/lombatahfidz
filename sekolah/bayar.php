@@ -9,6 +9,8 @@ $sekolah_id = $_SESSION['sekolah_id'];
 $page_title = 'Pembayaran';
 $success = '';
 $error = '';
+if (isset($_SESSION['flash_success'])) { $success = $_SESSION['flash_success']; unset($_SESSION['flash_success']); }
+if (isset($_SESSION['flash_error'])) { $error = $_SESSION['flash_error']; unset($_SESSION['flash_error']); }
 
 // Proses upload atau hapus bukti pembayaran
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -37,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Hapus dari database
                 $stmt = $pdo->prepare("DELETE FROM pembayaran WHERE id = ? AND sekolah_id = ?");
                 $stmt->execute([$id_hapus, $sekolah_id]);
-                $success = "Data riwayat pembayaran berhasil dihapus!";
+                $_SESSION['flash_success'] = "Data riwayat pembayaran berhasil dihapus!"; header("Location: bayar.php"); exit();
             } else {
                 $error = "Data pembayaran tidak ditemukan atau Anda tidak memiliki akses.";
             }
@@ -99,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $file_names_str = implode(',', $uploaded_files);
                     $stmt = $pdo->prepare("INSERT INTO pembayaran (sekolah_id, nominal, bukti_pembayaran) VALUES (?, ?, ?)");
                     $stmt->execute([$sekolah_id, $nominal, $file_names_str]);
-                    $success = count($uploaded_files) . " file bukti pembayaran berhasil diupload!" . (count($error_msgs) > 0 ? " (" . implode(', ', $error_msgs) . ")" : "");
+                    $_SESSION['flash_success'] = count($uploaded_files) . " file bukti pembayaran berhasil diupload!" . (count($error_msgs) > 0 ? " (" . implode(', ', $error_msgs) . ")" : ""); header("Location: bayar.php"); exit();
                 } catch (PDOException $e) {
                     error_log('Payment upload error: ' . $e->getMessage());
                     $error = 'Terjadi kesalahan dalam menyimpan data ke database!';
@@ -259,3 +261,6 @@ function showBuktiModal(fileUrl) {
 $content = ob_get_clean();
 include 'includes/layout.php';
 ?>
+
+
+
