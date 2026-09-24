@@ -16,6 +16,13 @@ try {
     $stmt = $pdo->prepare("SELECT * FROM peserta WHERE sekolah_id = ? ORDER BY created_at DESC");
     $stmt->execute([$sekolah_id]);
     $peserta_list = $stmt->fetchAll();
+    
+    $stmtSekolah = $pdo->prepare("SELECT nama_sekolah FROM sekolah WHERE id = ?");
+    $stmtSekolah->execute([$sekolah_id]);
+    $nama_sekolah = $stmtSekolah->fetchColumn();
+    if (!$nama_sekolah) {
+        $nama_sekolah = "Sekolah";
+    }
 } catch (PDOException $e) {
     $error = "Terjadi kesalahan dalam mengambil data!";
 }
@@ -151,7 +158,7 @@ ob_start();
                 <html>
                 <head>
                     <link rel="icon" type="image/x-icon" href="../favicon.ico">
-    <title>Data Peserta - <?php echo htmlspecialchars($_SESSION['nama_sekolah'] ?? 'Sekolah'); ?></title>
+    <title>Data Peserta - <?php echo htmlspecialchars($nama_sekolah); ?></title>
                     <style>
                         body { font-family: Arial, sans-serif; margin: 20px; }
                         .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -173,7 +180,7 @@ ob_start();
                 <body>
                     <div class="print-header">
                         <h2>Data Peserta Lomba Tahfidz</h2>
-                        <h3><?php echo htmlspecialchars($_SESSION['nama_sekolah'] ?? 'Sekolah'); ?></h3>
+                        <h3><?php echo htmlspecialchars($nama_sekolah); ?></h3>
                     </div>
                     <div class="print-info">
                         <p><strong>Tanggal Cetak:</strong> ${new Date().toLocaleDateString('id-ID')}</p>
@@ -233,3 +240,5 @@ ob_start();
 $content = ob_get_clean();
 include 'includes/layout.php';
 ?>
+
+
