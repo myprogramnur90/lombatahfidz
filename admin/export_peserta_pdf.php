@@ -145,7 +145,7 @@ $namaLomba = 'Lomba Tahfidz';
         
         <div class="no-print" style="margin-top: 20px; text-align: center;">
             <button onclick="window.print()" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer;">Print PDF</button>
-            <button onclick="window.close()" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Tutup</button>
+            <button onclick="window.close(); window.location.href='peserta.php';" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Tutup</button>
         </div>
     </div>
 

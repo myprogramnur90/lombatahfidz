@@ -264,7 +264,7 @@ try {
                             <a href="export_peserta.php" class="btn btn-success btn-action" title="Export Excel">
                                 <i class="fas fa-file-excel me-2"></i>Export Excel
                             </a>
-                            <a href="export_peserta_pdf.php" class="btn btn-danger btn-action" title="Export PDF">
+                            <a href="export_peserta_pdf.php" target="_blank" class="btn btn-danger btn-action" title="Export PDF">
                                 <i class="fas fa-file-pdf me-2"></i>Export PDF
                             </a>
                             <button class="btn btn-info text-white btn-action" data-bs-toggle="modal" data-bs-target="#importPesertaModal">
@@ -873,5 +873,6 @@ try {
     </script>
 </body>
 </html>
+
 
 
