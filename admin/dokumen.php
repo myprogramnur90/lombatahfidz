@@ -10,6 +10,18 @@ if (!isset($_SESSION['admin_id'])) {
 $success = '';
 $error = '';
 
+// Proses approve dokumen (Setujui)
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'approve_dokumen') {
+    $dokumen_id = $_POST['dokumen_id'];
+    try {
+        $stmt = $pdo->prepare("UPDATE dokumen_berka SET status_dokumen = 'Diterima' WHERE id = ?");
+        $stmt->execute([$dokumen_id]);
+        $success = 'Dokumen berhasil disetujui (Diterima)!';
+    } catch (PDOException $e) {
+        $error = 'Terjadi kesalahan dalam menyetujui dokumen!';
+    }
+}
+
 // Proses update status dokumen
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_status') {
     $dokumen_id = $_POST['dokumen_id'];
@@ -137,6 +149,15 @@ try {
                                                         </a>
                                                     </td>
                                                     <td>
+                                                        <?php if ($dokumen['status_dokumen'] != 'Diterima'): ?>
+                                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Setujui dokumen ini? (Status akan menjadi Diterima)');">
+                                                            <input type="hidden" name="action" value="approve_dokumen">
+                                                            <input type="hidden" name="dokumen_id" value="<?php echo $dokumen['id']; ?>">
+                                                            <button type="submit" class="btn btn-sm btn-outline-success me-1" title="Setujui (Diterima)">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+                                                        </form>
+                                                        <?php endif; ?>
                                                         <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#statusModal<?php echo $dokumen['id']; ?>" title="Update Status">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
@@ -239,3 +260,5 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
