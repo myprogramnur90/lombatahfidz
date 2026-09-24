@@ -81,11 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Ambil data pembayaran terakhir
+// Ambil riwayat pembayaran
 try {
-    $stmt = $pdo->prepare("SELECT * FROM pembayaran WHERE sekolah_id = ? ORDER BY created_at DESC LIMIT 1");
+    $stmt = $pdo->prepare("SELECT * FROM pembayaran WHERE sekolah_id = ? ORDER BY created_at DESC");
     $stmt->execute([$sekolah_id]);
-    $pembayaran = $stmt->fetch();
+    $riwayat_pembayaran = $stmt->fetchAll();
 } catch (PDOException $e) {
     $error = "Terjadi kesalahan dalam mengambil data!";
 }
@@ -130,31 +130,37 @@ ob_start();
                                     <h5><i class="fas fa-info-circle me-2"></i>Status Pembayaran</h5>
                                 </div>
                                 <div class="card-body">
-                                    <?php if ($pembayaran): ?>
-                                        <p><strong>Nominal:</strong> Rp <?php echo number_format($pembayaran['nominal']); ?></p>
-                                        <p><strong>Status:</strong> 
-                                            <span class="badge bg-<?php echo $pembayaran['status_pembayaran'] == 'Lunas' ? 'success' : ($pembayaran['status_pembayaran'] == 'Ditolak' ? 'danger' : 'warning'); ?>">
-                                                <?php echo ucfirst($pembayaran['status_pembayaran']); ?>
-                                            </span>
-                                        </p>
-                                        <p><strong>Tanggal:</strong> <?php echo date('d/m/Y H:i', strtotime($pembayaran['tanggal_bayar'])); ?></p>
-                                        <?php if ($pembayaran['bukti_pembayaran']): ?>
-                                            <p><strong>Bukti:</strong> 
-                                                <?php 
-                                                $buktis = explode(',', $pembayaran['bukti_pembayaran']);
-                                                foreach ($buktis as $index => $bukti): 
-                                                    $bukti = trim($bukti);
-                                                    if (!empty($bukti)):
-                                                ?>
-                                                    <a href="../uploads/bukti_pembayaran/<?php echo $bukti; ?>" target="_blank" class="btn btn-sm btn-outline-primary mb-1">
-                                                        <i class="fas fa-eye me-1"></i>Lihat <?php echo count($buktis) > 1 ? ($index + 1) : ''; ?>
-                                                    </a>
-                                                <?php 
-                                                    endif;
-                                                endforeach; 
-                                                ?>
-                                            </p>
-                                        <?php endif; ?>
+                                    <?php if (count($riwayat_pembayaran) > 0): ?>
+                                        <div class="list-group">
+                                        <?php foreach ($riwayat_pembayaran as $pembayaran): ?>
+                                            <div class="list-group-item">
+                                                <div class="d-flex w-100 justify-content-between mb-2">
+                                                    <h6 class="mb-1"><strong>Nominal:</strong> Rp <?php echo number_format($pembayaran['nominal'], 0, ',', '.'); ?></h6>
+                                                    <span class="badge bg-<?php echo $pembayaran['status_pembayaran'] == 'Lunas' ? 'success' : ($pembayaran['status_pembayaran'] == 'Ditolak' ? 'danger' : 'warning'); ?>">
+                                                        <?php echo ucfirst($pembayaran['status_pembayaran']); ?>
+                                                    </span>
+                                                </div>
+                                                <p class="mb-1"><strong>Tanggal:</strong> <?php echo date('d/m/Y H:i', strtotime($pembayaran['tanggal_bayar'])); ?></p>
+                                                <?php if ($pembayaran['bukti_pembayaran']): ?>
+                                                    <div class="mt-2"><strong>Bukti:</strong> 
+                                                        <?php 
+                                                        $buktis = explode(',', $pembayaran['bukti_pembayaran']);
+                                                        foreach ($buktis as $index => $bukti): 
+                                                            $bukti = trim($bukti);
+                                                            if (!empty($bukti)):
+                                                        ?>
+                                                            <a href="../uploads/bukti_pembayaran/<?php echo htmlspecialchars($bukti); ?>" target="_blank" class="btn btn-sm btn-outline-primary mb-1">
+                                                                <i class="fas fa-eye me-1"></i>Lihat <?php echo count($buktis) > 1 ? ($index + 1) : ''; ?>
+                                                            </a>
+                                                        <?php 
+                                                            endif;
+                                                        endforeach; 
+                                                        ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                        </div>
                                     <?php else: ?>
                                         <p class="text-muted">Belum ada data pembayaran</p>
                                     <?php endif; ?>
