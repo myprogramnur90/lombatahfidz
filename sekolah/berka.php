@@ -107,9 +107,9 @@ ob_start();
                                                     </span>
                                                 </p>
                                                 <p class="mb-1"><strong>Tanggal:</strong> <?php echo date('d/m/Y H:i', strtotime($dokumen['tanggal_upload'])); ?></p>
-                                                <a href="../uploads/dokumen_berka/<?php echo $dokumen['file_dokumen']; ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="showDokumenModal('../uploads/dokumen_berka/<?php echo htmlspecialchars($dokumen['file_dokumen']); ?>')">
                                                     <i class="fas fa-eye me-1"></i>Lihat
-                                                </a>
+                                                </button>
                                             </div>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -118,6 +118,45 @@ ob_start();
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+<!-- Modal Dokumen -->
+<div class="modal fade" id="dokumenModal" tabindex="-1" aria-labelledby="dokumenModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dokumenModalLabel">Dokumen Berka</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center" id="dokumenModalBody">
+        <!-- Konten akan dimuat via JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showDokumenModal(fileUrl) {
+    let modalBody = document.getElementById('dokumenModalBody');
+    let ext = fileUrl.split('.').pop().toLowerCase();
+    
+    // Tampilkan loading spinner sementara memuat konten
+    modalBody.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+    
+    // Inisialisasi modal dan tampilkan
+    var myModal = new bootstrap.Modal(document.getElementById('dokumenModal'));
+    myModal.show();
+    
+    // Tentukan konten berdasarkan ekstensi (pdf vs image)
+    setTimeout(() => {
+        if (ext === 'pdf') {
+            modalBody.innerHTML = `<iframe src="${fileUrl}" width="100%" height="500px" style="border: none;"></iframe>`;
+        } else {
+            modalBody.innerHTML = `<img src="${fileUrl}" class="img-fluid rounded" alt="Dokumen" style="max-height: 80vh; max-width: 100%;">`;
+        }
+    }, 300); // Sedikit delay agar modal terbuka lebih mulus
+}
+</script>
 <?php
 $content = ob_get_clean();
 include 'includes/layout.php';
