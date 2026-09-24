@@ -61,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nama_lomba = trim($_POST['nama_lomba']);
     $tanggal_penutupan = $_POST['tanggal_penutupan'];
     $biaya_pendaftaran = trim($_POST['biaya_pendaftaran']);
+    $biaya_pendaftaran = str_replace('.', '', $biaya_pendaftaran); // hilangkan titik sebelum disimpan
     $kontak_panitia = trim($_POST['kontak_panitia']);
     $link_grup_wa = trim($_POST['link_grup_wa']);
     $alamat_sekretariat = trim($_POST['alamat_sekretariat']);
@@ -236,8 +237,9 @@ $logoPath = $pengaturan_data['logo_sekolah'] ?? '';
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="biaya_pendaftaran" class="form-label">Biaya Pendaftaran (Rp) <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" id="biaya_pendaftaran" name="biaya_pendaftaran" 
-                                               value="<?php echo $pengaturan_data['biaya_pendaftaran'] ?? ''; ?>" required>
+                                        <input type="text" class="form-control" id="biaya_pendaftaran" name="biaya_pendaftaran" 
+                                               value="<?php echo !empty($pengaturan_data['biaya_pendaftaran']) ? number_format((int)$pengaturan_data['biaya_pendaftaran'], 0, '', '.') : ''; ?>" 
+                                               required onkeyup="formatRupiah(this)">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="kontak_panitia" class="form-label">Kontak Panitia <span class="text-danger">*</span></label>
@@ -350,6 +352,12 @@ $logoPath = $pengaturan_data['logo_sekolah'] ?? '';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+    function formatRupiah(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        let formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        input.value = formatted;
+    }
+
     function previewLogo(input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
