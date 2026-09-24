@@ -45,7 +45,7 @@ switch ($post['jenis_post']) {
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=1.1">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($post['judul']); ?> - <?php echo htmlspecialchars($namaLomba); ?></title>
@@ -192,3 +192,4 @@ switch ($post['jenis_post']) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

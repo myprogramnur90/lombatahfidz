@@ -40,7 +40,7 @@ try {
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico?v=1.1">
     <meta charset="UTF-8">
     <title>Export Soal Musabaqoh - PDF</title>
     <style>
@@ -307,3 +307,4 @@ try {
     </div>
 </body>
 </html>
+

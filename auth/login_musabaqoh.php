@@ -35,7 +35,7 @@ if ($_POST) {
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico?v=1.1">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Musabaqoh Hifdzul Qur'an</title>
@@ -173,3 +173,4 @@ if ($_POST) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

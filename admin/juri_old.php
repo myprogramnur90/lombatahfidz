@@ -115,7 +115,7 @@ $result_juri = $conn->query($query_juri);
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico?v=1.1">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Juri - Admin</title>
@@ -469,3 +469,4 @@ $result_juri = $conn->query($query_juri);
     </script>
 </body>
 </html>
+

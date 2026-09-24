@@ -35,7 +35,7 @@ header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: max-age=0');
 
 echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
-echo '<head><link rel="icon" type="image/x-icon" href="../favicon.ico">
+echo '<head><link rel="icon" type="image/x-icon" href="../favicon.ico?v=1.1">
     <meta charset="UTF-8"></head>';
 echo '<body>';
 
@@ -95,3 +95,4 @@ if (!empty($soalFinal)) {
 echo '<br><p style="font-size: 10pt; color: #666;">Diekspor pada: ' . date('d/m/Y H:i:s') . '</p>';
 echo '</body></html>';
 ?>
+

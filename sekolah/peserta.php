@@ -157,7 +157,7 @@ ob_start();
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+                    <link rel="icon" type="image/x-icon" href="../favicon.ico?v=1.1">
     <title>Data Peserta - <?php echo htmlspecialchars($nama_sekolah); ?></title>
                     <style>
                         body { font-family: Arial, sans-serif; margin: 20px; }
@@ -240,5 +240,6 @@ ob_start();
 $content = ob_get_clean();
 include 'includes/layout.php';
 ?>
+
 
 
