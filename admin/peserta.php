@@ -75,6 +75,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
+// Proses approve peserta (Setuju)
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'approve_peserta') {
+    $peserta_id = $_POST['peserta_id'];
+    
+    try {
+        $stmt = $pdo->prepare("UPDATE peserta SET status = 'Diterima' WHERE id = ?");
+        $stmt->execute([$peserta_id]);
+        
+        $stmt = $pdo->prepare("SELECT sekolah_id FROM peserta WHERE id = ?");
+        $stmt->execute([$peserta_id]);
+        $peserta_data = $stmt->fetch();
+        $sekolah_id = $peserta_data['sekolah_id'];
+        
+        $stmt = $pdo->prepare("UPDATE pembayaran SET status_pembayaran = 'Lunas' WHERE sekolah_id = ?");
+        $stmt->execute([$sekolah_id]);
+        
+        $stmt = $pdo->prepare("UPDATE dokumen_berka SET status_dokumen = 'Diterima' WHERE sekolah_id = ?");
+        $stmt->execute([$sekolah_id]);
+        
+        $success = 'Status peserta berhasil disetujui (Diterima)! Pembayaran dan dokumen otomatis divalidasi.';
+    } catch (PDOException $e) {
+        $error = 'Terjadi kesalahan dalam menyetujui peserta!';
+    }
+}
+
 // Proses tambah peserta
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add') {
     $sekolah_id = $_POST['sekolah_id'];
@@ -394,7 +419,17 @@ try {
                                                         <?php endif; ?>
                                                     </td>
                                                     <td><?php echo date('d/m/Y', strtotime($peserta['tanggal_daftar'])); ?></td>
-                                                    <td>
+                                                    <td class="text-nowrap">
+                                                        <?php if ($peserta['status'] != 'Diterima'): ?>
+                                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Setujui peserta ini? (Status akan menjadi Diterima, Pembayaran & Dokumen otomatis divalidasi)');">
+                                                            <?php echo getCsrfInput(); ?>
+                                                            <input type="hidden" name="action" value="approve_peserta">
+                                                            <input type="hidden" name="peserta_id" value="<?php echo $peserta['id']; ?>">
+                                                            <button type="submit" class="btn btn-sm btn-outline-success me-1" title="Setujui (Diterima)">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+                                                        </form>
+                                                        <?php endif; ?>
                                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detailModal<?php echo $peserta['id']; ?>" title="Lihat Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
@@ -838,3 +873,5 @@ try {
     </script>
 </body>
 </html>
+
+
