@@ -116,6 +116,69 @@ function isActive($page) {
 </div>
 
 <style>
+
+
+/* Tooltip customization */
+.tooltip {
+    font-size: 0.875rem;
+}
+
+.tooltip-inner {
+    background-color: #333;
+    color: white;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+/* Sidebar styles */
+.sidebar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 100vh;
+    color: white;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin: 5px 0;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 1001 !important;
+    position: relative !important;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.sidebar .nav-link i {
+    width: 20px;
+    text-align: center;
+}
 /* Responsive Menu Styles */
 @media (max-width: 768px) {
     .sidebar {
@@ -196,68 +259,6 @@ function isActive($page) {
         display: none !important;
     }
 }
-
-/* Tooltip customization */
-.tooltip {
-    font-size: 0.875rem;
-}
-
-.tooltip-inner {
-    background-color: #333;
-    color: white;
-    border-radius: 6px;
-    padding: 8px 12px;
-}
-
-/* Sidebar styles */
-.sidebar {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    height: 100vh;
-    color: white;
-    position: sticky;
-    top: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-/* Custom Scrollbar for Sidebar */
-.sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-.sidebar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-}
-.sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-}
-.sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
-}
-
-.sidebar .nav-link {
-    color: rgba(255, 255, 255, 0.8);
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin: 5px 0;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    pointer-events: auto !important;
-    cursor: pointer !important;
-    z-index: 1001 !important;
-    position: relative !important;
-}
-
-.sidebar .nav-link:hover,
-.sidebar .nav-link.active {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.sidebar .nav-link i {
-    width: 20px;
-    text-align: center;
-}
 </style>
 
 <script>
@@ -337,3 +338,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
