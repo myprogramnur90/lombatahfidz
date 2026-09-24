@@ -182,9 +182,9 @@ ob_start();
                                                             $bukti = trim($bukti);
                                                             if (!empty($bukti)):
                                                         ?>
-                                                            <a href="../uploads/bukti_pembayaran/<?php echo htmlspecialchars($bukti); ?>" target="_blank" class="btn btn-sm btn-outline-primary mb-1">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary mb-1" onclick="showBuktiModal('../uploads/bukti_pembayaran/<?php echo htmlspecialchars($bukti); ?>')">
                                                                 <i class="fas fa-eye me-1"></i>Lihat <?php echo count($buktis) > 1 ? ($index + 1) : ''; ?>
-                                                            </a>
+                                                            </button>
                                                         <?php 
                                                             endif;
                                                         endforeach; 
@@ -212,11 +212,47 @@ ob_start();
                         </div>
                     </div>
 
+<!-- Modal Bukti Pembayaran -->
+<div class="modal fade" id="buktiModal" tabindex="-1" aria-labelledby="buktiModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="buktiModalLabel">Bukti Pembayaran</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center" id="buktiModalBody">
+        <!-- Konten akan dimuat via JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 function formatRupiah(input) {
     let value = input.value.replace(/[^0-9]/g, '');
     let formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     input.value = formatted;
+}
+
+function showBuktiModal(fileUrl) {
+    let modalBody = document.getElementById('buktiModalBody');
+    let ext = fileUrl.split('.').pop().toLowerCase();
+    
+    // Tampilkan loading spinner sementara memuat konten
+    modalBody.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+    
+    // Inisialisasi modal dan tampilkan
+    var myModal = new bootstrap.Modal(document.getElementById('buktiModal'));
+    myModal.show();
+    
+    // Tentukan konten berdasarkan ekstensi (pdf vs image)
+    setTimeout(() => {
+        if (ext === 'pdf') {
+            modalBody.innerHTML = `<iframe src="${fileUrl}" width="100%" height="500px" style="border: none;"></iframe>`;
+        } else {
+            modalBody.innerHTML = `<img src="${fileUrl}" class="img-fluid rounded" alt="Bukti Pembayaran" style="max-height: 80vh; max-width: 100%;">`;
+        }
+    }, 300); // Sedikit delay agar modal terbuka lebih mulus
 }
 </script>
 <?php
