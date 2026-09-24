@@ -10,10 +10,42 @@ $page_title = 'Pembayaran';
 $success = '';
 $error = '';
 
-// Proses upload bukti pembayaran
+// Proses upload atau hapus bukti pembayaran
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     validateCsrfToken();
-    $nominal = $_POST['nominal'];
+    
+    if (isset($_POST['hapus_pembayaran_id'])) {
+        $id_hapus = (int)$_POST['hapus_pembayaran_id'];
+        
+        try {
+            // Cek kepemilikan dan ambil nama file
+            $stmt = $pdo->prepare("SELECT bukti_pembayaran FROM pembayaran WHERE id = ? AND sekolah_id = ?");
+            $stmt->execute([$id_hapus, $sekolah_id]);
+            $bayar_hapus = $stmt->fetch();
+            
+            if ($bayar_hapus) {
+                // Hapus file fisik
+                $buktis = explode(',', $bayar_hapus['bukti_pembayaran']);
+                foreach ($buktis as $b) {
+                    $b = trim($b);
+                    $file_path = '../uploads/bukti_pembayaran/' . $b;
+                    if (!empty($b) && file_exists($file_path)) {
+                        unlink($file_path);
+                    }
+                }
+                
+                // Hapus dari database
+                $stmt = $pdo->prepare("DELETE FROM pembayaran WHERE id = ? AND sekolah_id = ?");
+                $stmt->execute([$id_hapus, $sekolah_id]);
+                $success = "Data riwayat pembayaran berhasil dihapus!";
+            } else {
+                $error = "Data pembayaran tidak ditemukan atau Anda tidak memiliki akses.";
+            }
+        } catch (PDOException $e) {
+            $error = "Terjadi kesalahan saat menghapus data!";
+        }
+    } elseif (isset($_POST['nominal'])) {
+        $nominal = $_POST['nominal'];
     // hilangkan titik jika ada format ribuan
     $nominal = str_replace('.', '', $nominal);
     
@@ -158,6 +190,16 @@ ob_start();
                                                         ?>
                                                     </div>
                                                 <?php endif; ?>
+                                                
+                                                <div class="mt-2 text-end">
+                                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus riwayat pembayaran ini? File bukti juga akan terhapus secara permanen.');">
+                                                        <?php echo getCsrfInput(); ?>
+                                                        <input type="hidden" name="hapus_pembayaran_id" value="<?php echo $pembayaran['id']; ?>">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-trash me-1"></i>Hapus
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         <?php endforeach; ?>
                                         </div>
