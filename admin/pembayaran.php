@@ -112,6 +112,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
+// Proses approve pembayaran (Setujui)
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'approve_pembayaran') {
+    validateCsrfToken();
+    $pembayaran_id = $_POST['pembayaran_id'];
+    
+    try {
+        $stmt = $pdo->prepare("UPDATE pembayaran SET status_pembayaran = 'Lunas' WHERE id = ?");
+        $stmt->execute([$pembayaran_id]);
+        $success = 'Pembayaran berhasil disetujui (Lunas)!';
+    } catch (PDOException $e) {
+        $error = 'Terjadi kesalahan dalam menyetujui pembayaran!';
+    }
+}
+
 // Proses tambah pembayaran manual
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add_pembayaran') {
     $sekolah_id = $_POST['sekolah_id'];
@@ -350,7 +364,17 @@ try {
                                                         <?php endif; ?>
                                                     </td>
                                                     <td>
-                                                        <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#editModal<?php echo $pembayaran['id']; ?>" title="Edit Pembayaran">
+                                                        <?php if ($pembayaran['status_pembayaran'] != 'Lunas'): ?>
+<form method="POST" style="display:inline;" onsubmit="return confirm('Setujui pembayaran ini? (Status akan menjadi Lunas)');">
+    <?php echo getCsrfInput(); ?>
+    <input type="hidden" name="action" value="approve_pembayaran">
+    <input type="hidden" name="pembayaran_id" value="<?php echo $pembayaran['id']; ?>">
+    <button type="submit" class="btn btn-sm btn-outline-success me-1" title="Setujui (Lunas)">
+        <i class="fas fa-check"></i>
+    </button>
+</form>
+<?php endif; ?>
+<button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#editModal<?php echo $pembayaran['id']; ?>" title="Edit Pembayaran">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
                                                         <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $pembayaran['id']; ?>" title="Hapus">
@@ -698,3 +722,4 @@ try {
     </script>
 </body>
 </html>
+
