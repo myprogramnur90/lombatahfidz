@@ -44,8 +44,20 @@ try {
     // Abaikan jika sudah ada
 }
 
+// Pastikan pengaturan nama_sekolah ada di database
+try {
+    $cekNamaSekolah = $pdo->prepare("SELECT COUNT(*) FROM pengaturan WHERE nama_pengaturan = 'nama_sekolah'");
+    $cekNamaSekolah->execute();
+    if ($cekNamaSekolah->fetchColumn() == 0) {
+        $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('nama_sekolah', '', 'Nama Sekolah Penyelenggara')")->execute();
+    }
+} catch (PDOException $e) {
+    // Abaikan jika sudah ada
+}
+
 // Proses update pengaturan
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $nama_sekolah = trim($_POST['nama_sekolah'] ?? '');
     $nama_lomba = trim($_POST['nama_lomba']);
     $tanggal_penutupan = $_POST['tanggal_penutupan'];
     $biaya_pendaftaran = trim($_POST['biaya_pendaftaran']);
@@ -116,6 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // Update pengaturan teks
         $pengaturan = [
+            'nama_sekolah' => $nama_sekolah,
             'nama_lomba' => $nama_lomba,
             'tanggal_penutupan' => $tanggal_penutupan,
             'biaya_pendaftaran' => $biaya_pendaftaran,
@@ -200,6 +213,13 @@ $logoPath = $pengaturan_data['logo_sekolah'] ?? '';
                         </div>
                         <div class="card-body">
                             <form method="POST" enctype="multipart/form-data">
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="nama_sekolah" class="form-label">Nama Sekolah <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="nama_sekolah" name="nama_sekolah" 
+                                               value="<?php echo htmlspecialchars($pengaturan_data['nama_sekolah'] ?? ''); ?>" required>
+                                    </div>
+                                </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="nama_lomba" class="form-label">Nama Lomba <span class="text-danger">*</span></label>
