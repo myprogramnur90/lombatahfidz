@@ -144,9 +144,18 @@ try {
                                                     </td>
                                                     <td><?php echo date('d/m/Y H:i', strtotime($dokumen['tanggal_upload'])); ?></td>
                                                     <td>
-                                                        <a href="../uploads/dokumen_berka/<?php echo $dokumen['file_dokumen']; ?>" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
+                                                        <?php 
+                                                        $ext = strtolower(pathinfo($dokumen['file_dokumen'], PATHINFO_EXTENSION));
+                                                        $fileUrl = '../uploads/dokumen_berka/' . htmlspecialchars($dokumen['file_dokumen']);
+                                                        if ($ext === 'pdf'): ?>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="showDokumenModal('<?php echo $fileUrl; ?>')" title="Lihat PDF">
+                                                                <i class="fas fa-file-pdf fa-lg"></i>
+                                                            </button>
+                                                        <?php else: ?>
+                                                            <a href="#" onclick="showDokumenModal('<?php echo $fileUrl; ?>'); return false;">
+                                                                <img src="<?php echo $fileUrl; ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" alt="Dokumen">
+                                                            </a>
+                                                        <?php endif; ?>
                                                     </td>
                                                     <td>
                                                         <?php if ($dokumen['status_dokumen'] != 'Diterima'): ?>
@@ -257,8 +266,48 @@ try {
         </div>
     </div>
 
+    <!-- Modal Dokumen -->
+<div class="modal fade" id="dokumenModal" tabindex="-1" aria-labelledby="dokumenModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dokumenModalLabel">Dokumen Berka</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center" id="dokumenModalBody">
+        <!-- Konten akan dimuat via JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function showDokumenModal(fileUrl) {
+        let modalBody = document.getElementById('dokumenModalBody');
+        let ext = fileUrl.split('.').pop().toLowerCase();
+        
+        // Tampilkan loading spinner sementara memuat konten
+        modalBody.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        
+        // Inisialisasi modal dan tampilkan
+        var myModal = new bootstrap.Modal(document.getElementById('dokumenModal'));
+        myModal.show();
+        
+        // Tentukan konten berdasarkan ekstensi (pdf vs image)
+        setTimeout(() => {
+            if (ext === 'pdf') {
+                modalBody.innerHTML = `<iframe src="${fileUrl}" width="100%" height="500px" style="border: none;"></iframe>`;
+            } else {
+                modalBody.innerHTML = `<img src="${fileUrl}" class="img-fluid rounded" alt="Dokumen" style="max-height: 80vh; max-width: 100%;">`;
+            }
+        }, 300);
+    }
+    </script>
 </body>
 </html>
+
+
+
 
 
