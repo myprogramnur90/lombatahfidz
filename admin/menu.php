@@ -181,7 +181,9 @@ function isActive($page) {
     /* Adjust main content for mobile */
     .main-content {
         margin-left: 0;
-        padding-left: 60px;
+        padding-top: 60px;
+        padding-left: 15px; /* using default bootstrap padding */
+        padding-right: 15px;
     }
 }
 

@@ -76,7 +76,9 @@ if (!isset($page_title)) {
         /* Responsive adjustments */
         @media (max-width: 767.98px) {
             .col-md-9.col-lg-10 {
-                padding-left: 80px !important;
+                padding-top: 60px !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
             }
             .container-fluid .row {
                 margin-left: 0;
