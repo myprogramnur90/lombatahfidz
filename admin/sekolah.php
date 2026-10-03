@@ -192,7 +192,7 @@ try {
                                                     <td><?php echo htmlspecialchars($sekolah['npsn']); ?></td>
                                                     <td><?php echo htmlspecialchars($sekolah['username']); ?></td>
                                                     <td>
-                                                        <span class="badge bg-info">
+                                                        <span class="badge <?php echo $sekolah['jumlah_pendaftar'] == 0 ? 'bg-danger' : 'bg-info'; ?>">
                                                             <?php echo $sekolah['jumlah_pendaftar']; ?> Orang
                                                         </span>
                                                     </td>
@@ -256,7 +256,11 @@ try {
                                                                     </tr>
                                                                     <tr>
                                                                         <th>Pendaftar</th>
-                                                                        <td><?php echo $sekolah['jumlah_pendaftar']; ?> Orang</td>
+                                                                        <td>
+                                                                            <span class="badge <?php echo $sekolah['jumlah_pendaftar'] == 0 ? 'bg-danger' : 'bg-info'; ?>">
+                                                                                <?php echo $sekolah['jumlah_pendaftar']; ?> Orang
+                                                                            </span>
+                                                                        </td>
                                                                     </tr>
                                                                     <tr>
                                                                         <th>Status</th>
