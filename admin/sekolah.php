@@ -101,7 +101,7 @@ if (isset($_SESSION['import_error'])) {
 
 // Ambil data sekolah
 try {
-    $stmt = $pdo->query("SELECT * FROM sekolah ORDER BY created_at DESC");
+    $stmt = $pdo->query("SELECT s.*, (SELECT COUNT(id) FROM peserta WHERE sekolah_id = s.id) as jumlah_pendaftar FROM sekolah s ORDER BY s.created_at DESC");
     $sekolah_list = $stmt->fetchAll();
 } catch (PDOException $e) {
     $error = "Terjadi kesalahan dalam mengambil data!";
@@ -175,6 +175,7 @@ try {
                                             <th>Nama Sekolah</th>
                                             <th>NPSN</th>
                                             <th>Username</th>
+                                            <th>Pendaftar</th>
                                             <th>Status</th>
                                             <th>Tanggal Dibuat</th>
                                             <th>Aksi</th>
@@ -190,6 +191,11 @@ try {
                                                     <td><?php echo htmlspecialchars($sekolah['nama_sekolah']); ?></td>
                                                     <td><?php echo htmlspecialchars($sekolah['npsn']); ?></td>
                                                     <td><?php echo htmlspecialchars($sekolah['username']); ?></td>
+                                                    <td>
+                                                        <span class="badge bg-info">
+                                                            <?php echo $sekolah['jumlah_pendaftar']; ?> Orang
+                                                        </span>
+                                                    </td>
                                                     <td>
                                                         <span class="badge bg-<?php echo $sekolah['status'] == 'Aktif' ? 'success' : 'danger'; ?>">
                                                             <?php echo $sekolah['status']; ?>
@@ -247,6 +253,10 @@ try {
                                                                     <tr>
                                                                         <th>Username</th>
                                                                         <td><?php echo htmlspecialchars($sekolah['username']); ?></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Pendaftar</th>
+                                                                        <td><?php echo $sekolah['jumlah_pendaftar']; ?> Orang</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <th>Status</th>
