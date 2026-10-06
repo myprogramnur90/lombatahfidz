@@ -66,12 +66,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 
 // Ambil data dokumen berka dengan join sekolah
 try {
-    $stmt = $pdo->query("
-        SELECT d.*, s.nama_sekolah 
-        FROM dokumen_berka d 
-        JOIN sekolah s ON d.sekolah_id = s.id 
-        ORDER BY d.created_at DESC
-    ");
+    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $query = "SELECT d.*, s.nama_sekolah FROM dokumen_berka d JOIN sekolah s ON d.sekolah_id = s.id";
+    $params = [];
+    if (!empty($search)) {
+        $query .= " WHERE s.nama_sekolah LIKE ? OR d.jenis_dokumen LIKE ? OR d.status_dokumen LIKE ? ";
+        $searchParam = "%$search%";
+        $params = [$searchParam, $searchParam, $searchParam];
+    }
+    $query .= " ORDER BY d.created_at DESC";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+
+
+
+
+
     $dokumen_list = $stmt->fetchAll();
 } catch (PDOException $e) {
     $error = "Terjadi kesalahan dalam mengambil data!";
@@ -115,6 +125,22 @@ try {
                         </div>
                     <?php endif; ?>
                     
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form method="GET" action="dokumen.php" class="row g-3 align-items-center">
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" name="search" placeholder="Cari sekolah, jenis dokumen, status..." value="<?php echo htmlspecialchars($search); ?>">
+                                        <button class="btn btn-primary" type="submit">Cari</button>
+                                        <?php if(!empty($search)): ?>
+                                            <a href="dokumen.php" class="btn btn-secondary">Reset</a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                     <div class="card">
                         <div class="card-body">
                             <div class="table-responsive">
