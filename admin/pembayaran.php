@@ -180,13 +180,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 
 // Ambil data pembayaran dengan join sekolah
 try {
-    $stmt = $pdo->query("
-        SELECT p.*, s.nama_sekolah 
-        FROM pembayaran p 
-        JOIN sekolah s ON p.sekolah_id = s.id 
-        ORDER BY p.created_at DESC
-    ");
-    $pembayaran_list = $stmt->fetchAll();
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $query = "SELECT p.*, s.nama_sekolah FROM pembayaran p JOIN sekolah s ON p.sekolah_id = s.id";
+    $params = [];
+    if (!empty($search)) {
+        $query .= " WHERE s.nama_sekolah LIKE ? OR p.status_pembayaran LIKE ? OR p.catatan LIKE ? ";
+        $searchParam = "%$search%";
+        $params = [$searchParam, $searchParam, $searchParam];
+    }
+    $query .= " ORDER BY p.created_at DESC";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+
+
+
+
+
+
     
     // Ambil daftar sekolah untuk form tambah pembayaran
     $stmtSekolah = $pdo->query("SELECT id, nama_sekolah FROM sekolah ORDER BY nama_sekolah ASC");
@@ -324,6 +334,22 @@ try {
                         </div>
                     </div>
                     
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form method="GET" action="pembayaran.php" class="row g-3 align-items-center">
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" name="search" placeholder="Cari sekolah, status, catatan..." value="<?php echo htmlspecialchars($search); ?>">
+                                        <button class="btn btn-primary" type="submit">Cari</button>
+                                        <?php if(!empty($search)): ?>
+                                            <a href="pembayaran.php" class="btn btn-secondary">Reset</a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                     <div class="card">
                         <div class="card-body">
                             <div class="table-responsive">
