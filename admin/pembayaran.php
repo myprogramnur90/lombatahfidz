@@ -191,6 +191,11 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $query .= " ORDER BY p.created_at DESC";
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
+    $pembayaran_list = $stmt->fetchAll();
+    
+    // Ambil daftar sekolah untuk form tambah pembayaran
+    $stmtSekolah = $pdo->query("SELECT id, nama_sekolah FROM sekolah ORDER BY nama_sekolah ASC");
+    $sekolah_list = $stmtSekolah->fetchAll();
 
 
 
@@ -198,9 +203,9 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 
     
-    // Ambil daftar sekolah untuk form tambah pembayaran
-    $stmtSekolah = $pdo->query("SELECT id, nama_sekolah FROM sekolah ORDER BY nama_sekolah ASC");
-    $sekolah_list = $stmtSekolah->fetchAll();
+
+
+
 } catch (PDOException $e) {
     $error = "Terjadi kesalahan dalam mengambil data!";
 }
