@@ -55,6 +55,17 @@ try {
     // Abaikan jika sudah ada
 }
 
+// Pastikan pengaturan maksimal_peserta ada di database
+try {
+    $cekMaksimalPeserta = $pdo->prepare("SELECT COUNT(*) FROM pengaturan WHERE nama_pengaturan = 'maksimal_peserta'");
+    $cekMaksimalPeserta->execute();
+    if ($cekMaksimalPeserta->fetchColumn() == 0) {
+        $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('maksimal_peserta', '100', 'Maksimal jumlah peserta keseluruhan')")->execute();
+    }
+} catch (PDOException $e) {
+    // Abaikan jika sudah ada
+}
+
 // Proses update pengaturan
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nama_sekolah = trim($_POST['nama_sekolah'] ?? '');
@@ -66,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $link_grup_wa = trim($_POST['link_grup_wa']);
     $alamat_sekretariat = trim($_POST['alamat_sekretariat']);
     $seo = trim($_POST['seo'] ?? '');
+    $maksimal_peserta = trim($_POST['maksimal_peserta'] ?? '100');
     
     try {
         // Handle upload logo
@@ -136,7 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'kontak_panitia' => $kontak_panitia,
             'link_grup_wa' => $link_grup_wa,
             'alamat_sekretariat' => $alamat_sekretariat,
-            'seo' => $seo
+            'seo' => $seo,
+            'maksimal_peserta' => $maksimal_peserta
         ];
         
         foreach ($pengaturan as $nama => $nilai) {
@@ -260,6 +273,14 @@ $logoPath = $pengaturan_data['logo_sekolah'] ?? '';
                                         <input type="text" class="form-control" id="seo" name="seo" 
                                                value="<?php echo htmlspecialchars($pengaturan_data['seo'] ?? ''); ?>" 
                                                placeholder="Masukkan deskripsi singkat untuk SEO">
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="maksimal_peserta" class="form-label">Maksimal Peserta <span class="text-danger">*</span></label>
+                                        <input type="number" min="1" class="form-control" id="maksimal_peserta" name="maksimal_peserta" 
+                                               value="<?php echo htmlspecialchars($pengaturan_data['maksimal_peserta'] ?? '100'); ?>" required>
                                     </div>
                                 </div>
 

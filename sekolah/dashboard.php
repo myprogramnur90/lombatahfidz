@@ -15,6 +15,13 @@ try {
     $stmt->execute([$sekolah_id]);
     $total_peserta = $stmt->fetch()['total'];
     
+    // Hitung jumlah peserta global untuk cek kuota
+    $stmt_global = $pdo->query("SELECT COUNT(*) FROM peserta");
+    $total_peserta_global = $stmt_global->fetchColumn();
+    $maksimal_peserta = (int) getPengaturan('maksimal_peserta');
+    if (!$maksimal_peserta) $maksimal_peserta = 100;
+    $kuota_penuh = $total_peserta_global >= $maksimal_peserta;
+    
     // Hitung peserta berdasarkan status
     $stmt = $pdo->prepare("SELECT status, COUNT(*) as jumlah FROM peserta WHERE sekolah_id = ? GROUP BY status");
     $stmt->execute([$sekolah_id]);
@@ -210,7 +217,11 @@ ob_start();
                     <div class="text-center py-4">
                         <div class="mb-3"><i class="fas fa-user-times fa-3x text-secondary opacity-50"></i></div>
                         <p class="text-secondary fw-bold mb-0">Belum ada peserta terdaftar</p>
-                        <a href="daftar.php" class="btn btn-primary btn-sm mt-3 rounded-pill px-4 fw-bold"><i class="fas fa-plus me-1"></i> Daftar Sekarang</a>
+                        <?php if ($kuota_penuh): ?>
+                            <button class="btn btn-secondary btn-sm mt-3 rounded-pill px-4 fw-bold" disabled><i class="fas fa-ban me-1"></i> Kuota Penuh</button>
+                        <?php else: ?>
+                            <a href="daftar.php" class="btn btn-primary btn-sm mt-3 rounded-pill px-4 fw-bold"><i class="fas fa-plus me-1"></i> Daftar Sekarang</a>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>

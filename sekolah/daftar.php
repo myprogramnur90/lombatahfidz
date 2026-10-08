@@ -10,8 +10,24 @@ $page_title = 'Daftar Peserta';
 $success = '';
 $error = '';
 
+// Cek kuota peserta
+$maksimal_peserta = (int) getPengaturan('maksimal_peserta');
+if (!$maksimal_peserta) $maksimal_peserta = 100;
+
+try {
+    $stmt_kuota = $pdo->query("SELECT COUNT(*) FROM peserta");
+    $total_peserta_global = $stmt_kuota->fetchColumn();
+} catch (PDOException $e) {
+    $total_peserta_global = 0;
+}
+
+$kuota_penuh = $total_peserta_global >= $maksimal_peserta;
+
 // Proses form pendaftaran
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if ($kuota_penuh) {
+        $error = 'Pendaftaran ditutup karena kuota peserta sudah penuh!';
+    } else {
     validateCsrfToken();
     $nama_lengkap = trim($_POST['nama_lengkap']);
     $nisn = trim($_POST['nisn']);
@@ -39,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = 'Terjadi kesalahan dalam menyimpan data!';
         }
     }
+    }
 }
 
 // Buat konten daftar peserta
@@ -53,6 +70,12 @@ ob_start();
                             <h5><i class="fas fa-user-plus me-2"></i>Form Pendaftaran Peserta</h5>
                         </div>
                         <div class="card-body">
+                            <?php if ($kuota_penuh): ?>
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Mohon Maaf!</strong> Pendaftaran saat ini ditutup karena kuota peserta (<?php echo $maksimal_peserta; ?> orang) sudah penuh.
+                                </div>
+                            <?php else: ?>
                             <form method="POST">
                                 <?php echo getCsrfInput(); ?>
                                 <div class="row">
@@ -122,6 +145,7 @@ ob_start();
                                     </button>
                                 </div>
                             </form>
+                            <?php endif; ?>
                         </div>
 <?php
 $content = ob_get_clean();
