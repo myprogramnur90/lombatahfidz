@@ -12,18 +12,21 @@ function initSecureSession() {
         // Konfigurasi cookie session yang aman
         ini_set('session.cookie_httponly', 1);
         ini_set('session.use_strict_mode', 1);
-        ini_set('session.cookie_samesite', 'Strict');
+        ini_set('session.cookie_samesite', 'Lax');
         
-        // Aktifkan secure cookie jika menggunakan HTTPS
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        // Aktifkan secure cookie jika menggunakan HTTPS (termasuk reverse proxy/Cloudflare)
+        $isHttps = (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === '1'))
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+            || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+        if ($isHttps) {
             ini_set('session.cookie_secure', 1);
         }
         
         session_start();
     }
     
-    // Set session timeout (30 menit)
-    $timeout = 1800;
+    // Set session timeout (2 jam)
+    $timeout = 7200;
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout) {
         session_unset();
         session_destroy();

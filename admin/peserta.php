@@ -747,6 +747,7 @@ try {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST">
+                    <?php echo getCsrfInput(); ?>
                     <input type="hidden" name="action" value="add">
                     <div class="modal-body">
                         <div class="row">
@@ -824,6 +825,7 @@ try {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="import_peserta.php" enctype="multipart/form-data">
+                    <?php echo getCsrfInput(); ?>
                     <div class="modal-body">
                         <div class="alert alert-info py-2 mb-3" style="font-size: 0.85rem;">
                             <i class="fas fa-info-circle me-1"></i>
