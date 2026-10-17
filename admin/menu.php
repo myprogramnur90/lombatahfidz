@@ -53,6 +53,11 @@ function isActive($page) {
                 <i class="fas fa-book-open me-2"></i>
                 <span class="menu-text">Soal</span>
             </a>
+            <a class="nav-link <?php echo isActive('user_musabaqoh.php'); ?>" href="user_musabaqoh.php"
+               data-bs-toggle="tooltip" data-bs-placement="right" title="Setting User Soal/Musabaqoh">
+                <i class="fas fa-user-lock me-2"></i>
+                <span class="menu-text">User Musabaqoh</span>
+            </a>
             <a class="nav-link <?php echo isActive('juri.php'); ?>" href="juri.php"
                data-bs-toggle="tooltip" data-bs-placement="right" title="Kelola Data Juri">
                 <i class="fas fa-gavel me-2"></i>
