@@ -17,7 +17,7 @@ if ($_POST) {
     $stmt->execute([$username]);
     $user = $stmt->fetch();
     
-    if ($user && password_verify($password, $user['password'])) {
+    if ($user && verifyPasswordWithFallback($password, $user['password'], $pdo, 'user_musabaqoh', $user['id'])) {
         session_regenerate_id(true);
         resetRateLimit('musabaqoh');
         $_SESSION['musabaqoh_logged_in'] = true;

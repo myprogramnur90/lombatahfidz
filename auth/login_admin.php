@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->execute([$username]);
         $admin = $stmt->fetch();
         
-        if ($admin && password_verify($password, $admin['password'])) {
+        if ($admin && verifyPasswordWithFallback($password, $admin['password'], $pdo, 'admin', $admin['id'])) {
             // Login berhasil
             session_regenerate_id(true);
             resetRateLimit('admin');

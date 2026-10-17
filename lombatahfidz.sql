@@ -837,7 +837,7 @@ CREATE TABLE `user_musabaqoh` (
 --
 
 INSERT INTO `user_musabaqoh` (`id`, `username`, `password`, `nama_lengkap`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'soal', '17e8a079455e4fd957b9af0d4a0f0d3b', 'Soal Musabaqoh', 'Aktif', '2025-10-08 00:47:45', '2025-10-08 00:47:45');
+(1, 'soal', '$2y$10$1BcAF6Gfj7pZA4V0C/m9Hu6ceFDJi4CmIma5SQ4twixipIQzUDwZm', 'Soal Musabaqoh', 'Aktif', '2025-10-08 00:47:45', '2025-10-08 00:47:45');
 
 --
 -- Indexes for dumped tables

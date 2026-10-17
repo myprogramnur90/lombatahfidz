@@ -26,7 +26,7 @@ if ($_POST) {
     
     if ($juri) {
         // Verifikasi password (menggunakan MD5 untuk konsistensi dengan database)
-        if (password_verify($password, $juri['password'])) {
+        if (verifyPasswordWithFallback($password, $juri['password'], $pdo, 'juri', $juri['id'])) {
             session_regenerate_id(true);
             resetRateLimit('juri');
             $_SESSION['juri_id'] = $juri['id'];

@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
             $stmt = $pdo->prepare("SELECT * FROM admin WHERE username = ?");
             $stmt->execute([$username]);
             $admin = $stmt->fetch();
-            if ($admin && password_verify($password, $admin['password'])) {
+            if ($admin && verifyPasswordWithFallback($password, $admin['password'], $pdo, 'admin', $admin['id'])) {
                 session_regenerate_id(true);
                 resetRateLimit('index_login');
                 $_SESSION['admin_id'] = $admin['id'];
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
             $stmt = $pdo->prepare("SELECT * FROM juri WHERE username = ? AND status = 'Aktif'");
             $stmt->execute([$username]);
             $juri = $stmt->fetch();
-            if ($juri && password_verify($password, $juri['password'])) {
+            if ($juri && verifyPasswordWithFallback($password, $juri['password'], $pdo, 'juri', $juri['id'])) {
                 session_regenerate_id(true);
                 resetRateLimit('index_login');
                 $_SESSION['juri_id'] = $juri['id'];
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
             $stmt = $pdo->prepare("SELECT * FROM user_musabaqoh WHERE username = ? AND status = 'Aktif'");
             $stmt->execute([$username]);
             $userMusabaqoh = $stmt->fetch();
-            if ($userMusabaqoh && password_verify($password, $userMusabaqoh['password'])) {
+            if ($userMusabaqoh && verifyPasswordWithFallback($password, $userMusabaqoh['password'], $pdo, 'user_musabaqoh', $userMusabaqoh['id'])) {
                 session_regenerate_id(true);
                 resetRateLimit('index_login');
                 $_SESSION['musabaqoh_logged_in'] = true;
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
             $stmt = $pdo->prepare("SELECT * FROM sekolah WHERE username = ? AND status = 'Aktif'");
             $stmt->execute([$username]);
             $sekolah = $stmt->fetch();
-            if ($sekolah && password_verify($password, $sekolah['password'])) {
+            if ($sekolah && verifyPasswordWithFallback($password, $sekolah['password'], $pdo, 'sekolah', $sekolah['id'])) {
                 session_regenerate_id(true);
                 resetRateLimit('index_login');
                 $_SESSION['sekolah_id'] = $sekolah['id'];

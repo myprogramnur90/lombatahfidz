@@ -219,4 +219,28 @@ function requireMusabaqohLogin() {
         exit();
     }
 }
+
+// =============================================
+// PASSWORD VERIFICATION & UPGRADE HELPER
+// =============================================
+function verifyPasswordWithFallback($inputPassword, $storedHash, $pdo = null, $table = '', $id = null) {
+    if (password_verify($inputPassword, $storedHash)) {
+        return true;
+    }
+    // Fallback untuk password lama yang masih menggunakan format MD5 (32 hex characters)
+    if (strlen($storedHash) === 32 && md5($inputPassword) === strtolower($storedHash)) {
+        // Upgrade hash otomatis ke bcrypt di database
+        if ($pdo && $table && $id) {
+            try {
+                $newHash = password_hash($inputPassword, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("UPDATE `$table` SET password = ? WHERE id = ?");
+                $stmt->execute([$newHash, $id]);
+            } catch (Exception $e) {
+                // Jangan batalkan login jika update hash gagal
+            }
+        }
+        return true;
+    }
+    return false;
+}
 ?>
