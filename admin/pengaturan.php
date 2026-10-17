@@ -66,6 +66,24 @@ try {
     // Abaikan jika sudah ada
 }
 
+// Pastikan pengaturan bel_jeda_teguran ada di database
+try {
+    $cekJeda = $pdo->prepare("SELECT COUNT(*) FROM pengaturan WHERE nama_pengaturan = 'bel_jeda_teguran'");
+    $cekJeda->execute();
+    if ($cekJeda->fetchColumn() == 0) {
+        $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('bel_jeda_teguran', '8', 'Durasi jeda waktu teguran peserta (detik)')")->execute();
+    }
+} catch (PDOException $e) {}
+
+// Pastikan pengaturan bel_jenis_bunyi ada di database
+try {
+    $cekBunyi = $pdo->prepare("SELECT COUNT(*) FROM pengaturan WHERE nama_pengaturan = 'bel_jenis_bunyi'");
+    $cekBunyi->execute();
+    if ($cekBunyi->fetchColumn() == 0) {
+        $pdo->prepare("INSERT INTO pengaturan (nama_pengaturan, nilai, keterangan) VALUES ('bel_jenis_bunyi', 'kuningan', 'Jenis bunyi bel musabaqoh (kuningan, digital, gong, tabung)')")->execute();
+    }
+} catch (PDOException $e) {}
+
 // Proses update pengaturan
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nama_sekolah = trim($_POST['nama_sekolah'] ?? '');
@@ -78,6 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $alamat_sekretariat = trim($_POST['alamat_sekretariat']);
     $seo = trim($_POST['seo'] ?? '');
     $maksimal_peserta = trim($_POST['maksimal_peserta'] ?? '100');
+    $bel_jeda_teguran = (int)($_POST['bel_jeda_teguran'] ?? 8);
+    if ($bel_jeda_teguran <= 0) $bel_jeda_teguran = 8;
+    $bel_jenis_bunyi = trim($_POST['bel_jenis_bunyi'] ?? 'kuningan');
+    $allowed_bunyi = ['kuningan', 'digital', 'gong', 'tabung'];
+    if (!in_array($bel_jenis_bunyi, $allowed_bunyi)) $bel_jenis_bunyi = 'kuningan';
     
     try {
         // Handle upload logo
@@ -149,7 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'link_grup_wa' => $link_grup_wa,
             'alamat_sekretariat' => $alamat_sekretariat,
             'seo' => $seo,
-            'maksimal_peserta' => $maksimal_peserta
+            'maksimal_peserta' => $maksimal_peserta,
+            'bel_jeda_teguran' => (string)$bel_jeda_teguran,
+            'bel_jenis_bunyi' => $bel_jenis_bunyi
         ];
         
         foreach ($pengaturan as $nama => $nilai) {
@@ -314,6 +339,41 @@ $logoPath = $pengaturan_data['logo_sekolah'] ?? '';
                                     </div>
                                 </div>
                                 
+                                <!-- Pengaturan Bel Musabaqoh (MHQ) -->
+                                <div class="card my-4 p-3" style="background: #fdfefe; border: 2px solid #5a78d1; border-radius: 14px;">
+                                    <h5 class="fw-bold mb-3" style="color: #2c3e50;"><i class="fas fa-bell me-2 text-warning"></i>Pengaturan Bel Musabaqoh (MHQ)</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="bel_jeda_teguran" class="form-label fw-bold">
+                                                <i class="fas fa-stopwatch me-1 text-warning"></i> Jeda Waktu Teguran Bel 1x (Detik) <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="number" min="3" max="60" class="form-control" id="bel_jeda_teguran" name="bel_jeda_teguran" 
+                                                       value="<?php echo htmlspecialchars($pengaturan_data['bel_jeda_teguran'] ?? '8'); ?>" required>
+                                                <span class="input-group-text">Detik</span>
+                                            </div>
+                                            <small class="text-muted">Batas jeda waktu kesempatan peserta tawaqquf/memperbaiki hafalan sebelum otomatis pindah soal (umumnya 5, 8, atau 10 detik).</small>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="bel_jenis_bunyi" class="form-label fw-bold">
+                                                <i class="fas fa-music me-1 text-info"></i> Pilihan Karakter Bunyi Bel <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group">
+                                                <select class="form-select" id="bel_jenis_bunyi" name="bel_jenis_bunyi">
+                                                    <option value="kuningan" <?php echo ($pengaturan_data['bel_jenis_bunyi'] ?? 'kuningan') === 'kuningan' ? 'selected' : ''; ?>>Lonceng Kuningan / Brass Bell (Klasik MHQ)</option>
+                                                    <option value="digital" <?php echo ($pengaturan_data['bel_jenis_bunyi'] ?? '') === 'digital' ? 'selected' : ''; ?>>Bel Digital / Ting Elektronik (Tajam & Modern)</option>
+                                                    <option value="gong" <?php echo ($pengaturan_data['bel_jenis_bunyi'] ?? '') === 'gong' ? 'selected' : ''; ?>>Gong / Singing Bell (Gema Berwibawa)</option>
+                                                    <option value="tabung" <?php echo ($pengaturan_data['bel_jenis_bunyi'] ?? '') === 'tabung' ? 'selected' : ''; ?>>Lonceng Tabung / Tubular Chime (Merdu)</option>
+                                                </select>
+                                                <button type="button" class="btn btn-primary" onclick="testSelectedBellSound()" title="Dengarkan Contoh Bunyi Bel">
+                                                    <i class="fas fa-play me-1"></i> Uji Bunyi
+                                                </button>
+                                            </div>
+                                            <small class="text-muted">Pilih karakter nada bel untuk layar soal musabaqoh.</small>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="mb-3">
                                     <label for="alamat_sekretariat" class="form-label">Alamat Sekretariat <span class="text-danger">*</span></label>
                                     <textarea class="form-control" id="alamat_sekretariat" name="alamat_sekretariat" rows="3" required><?php echo htmlspecialchars($pengaturan_data['alamat_sekretariat'] ?? ''); ?></textarea>
@@ -391,6 +451,115 @@ $logoPath = $pengaturan_data['logo_sekolah'] ?? '';
             document.getElementById('hapus_logo').value = '0';
         }
     }
+    // Web Audio API Synthesizer Preview untuk Admin Pengaturan Bel
+    let previewAudioCtx = null;
+    function getPreviewAudioCtx() {
+        if (!previewAudioCtx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) previewAudioCtx = new AC();
+        }
+        if (previewAudioCtx && previewAudioCtx.state === 'suspended') {
+            previewAudioCtx.resume();
+        }
+        return previewAudioCtx;
+    }
+
+    function testSelectedBellSound() {
+        const type = document.getElementById('bel_jenis_bunyi').value;
+        const ctx = getPreviewAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        if (type === 'digital') {
+            // Bel Digital / Ting Elektronik
+            const partials = [1760, 2640, 3520];
+            const master = ctx.createGain();
+            master.gain.setValueAtTime(0.85, now);
+            master.connect(ctx.destination);
+
+            partials.forEach((f, i) => {
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = i === 0 ? 'sine' : 'triangle';
+                osc.frequency.setValueAtTime(f, now);
+                g.gain.setValueAtTime(0.001, now);
+                g.gain.linearRampToValueAtTime(0.4 / (i + 1), now + 0.002);
+                g.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+                osc.connect(g);
+                g.connect(master);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            });
+        } else if (type === 'gong') {
+            // Gong / Singing Bell: frekuensi rendah, resonansi panjang
+            const freqs = [440, 554.37, 659.25, 880];
+            const master = ctx.createGain();
+            master.gain.setValueAtTime(0.9, now);
+            master.connect(ctx.destination);
+
+            freqs.forEach((f, i) => {
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(f, now);
+                g.gain.setValueAtTime(0.001, now);
+                g.gain.linearRampToValueAtTime(0.5 / (i + 1), now + 0.008);
+                g.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+                osc.connect(g);
+                g.connect(master);
+                osc.start(now);
+                osc.stop(now + 2.3);
+            });
+        } else if (type === 'tabung') {
+            // Lonceng Tabung / Tubular Chime
+            const freqs = [1318.5, 1760, 2637];
+            const master = ctx.createGain();
+            master.gain.setValueAtTime(0.9, now);
+            master.connect(ctx.destination);
+
+            freqs.forEach((f, i) => {
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(f, now);
+                g.gain.setValueAtTime(0.001, now);
+                g.gain.linearRampToValueAtTime(0.45 / (i + 1), now + 0.005);
+                g.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+                osc.connect(g);
+                g.connect(master);
+                osc.start(now);
+                osc.stop(now + 1.9);
+            });
+        } else {
+            // Default: Kuningan / Brass Bell MHQ
+            const partials = [
+                { f: 1046.5, g: 0.70, d: 1.6 },
+                { f: 1568.0, g: 0.45, d: 1.3 },
+                { f: 2093.0, g: 0.35, d: 1.0 },
+                { f: 2637.0, g: 0.22, d: 0.8 },
+                { f: 3136.0, g: 0.15, d: 0.6 }
+            ];
+            const master = ctx.createGain();
+            master.gain.setValueAtTime(0.95, now);
+            master.connect(ctx.destination);
+
+            partials.forEach((p, idx) => {
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(p.f, now);
+                osc.detune.setValueAtTime((idx - 2) * 5, now);
+                g.gain.setValueAtTime(0.001, now);
+                g.gain.linearRampToValueAtTime(p.g, now + 0.004);
+                g.gain.exponentialRampToValueAtTime(0.0001, now + p.d);
+                osc.connect(g);
+                g.connect(master);
+                osc.start(now);
+                osc.stop(now + p.d + 0.05);
+            });
+        }
+    }
+
     function hapusLogo() {
         if (confirm('Yakin ingin menghapus logo?')) {
             document.getElementById('hapus_logo').value = '1';

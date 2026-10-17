@@ -61,6 +61,12 @@ try {
     $stmtAktif->execute([$jenis_soal]);
     $pesertaAktif = $stmtAktif->fetch();
 } catch (Exception $e) {}
+
+// Ambil pengaturan bel musabaqoh dari admin
+$belJedaSetting = (int)getPengaturan('bel_jeda_teguran');
+if ($belJedaSetting <= 0) $belJedaSetting = 8;
+$belBunyiSetting = getPengaturan('bel_jenis_bunyi');
+if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
 ?>
 
 <!DOCTYPE html>
@@ -452,12 +458,28 @@ try {
                         <div class="col-12 col-md-6">
                             <div class="d-flex justify-content-md-end align-items-center gap-3 flex-wrap">
                                 <div class="d-flex align-items-center">
-                                    <label for="selectJeda" class="text-muted small me-2 text-nowrap"><i class="fas fa-stopwatch me-1"></i>Jeda Waktu Teguran:</label>
+                                    <label for="selectBunyi" class="text-muted small me-2 text-nowrap"><i class="fas fa-music me-1 text-info"></i>Bunyi Bel:</label>
+                                    <select id="selectBunyi" class="form-select form-select-sm w-auto">
+                                        <option value="kuningan" <?php echo $belBunyiSetting === 'kuningan' ? 'selected' : ''; ?>>Lonceng Kuningan</option>
+                                        <option value="digital" <?php echo $belBunyiSetting === 'digital' ? 'selected' : ''; ?>>Bel Digital</option>
+                                        <option value="gong" <?php echo $belBunyiSetting === 'gong' ? 'selected' : ''; ?>>Gong</option>
+                                        <option value="tabung" <?php echo $belBunyiSetting === 'tabung' ? 'selected' : ''; ?>>Lonceng Tabung</option>
+                                    </select>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <label for="selectJeda" class="text-muted small me-2 text-nowrap"><i class="fas fa-stopwatch me-1 text-warning"></i>Jeda Teguran:</label>
                                     <select id="selectJeda" class="form-select form-select-sm w-auto">
-                                        <option value="5">5 Detik</option>
-                                        <option value="8" selected>8 Detik</option>
-                                        <option value="10">10 Detik</option>
-                                        <option value="15">15 Detik</option>
+                                        <?php
+                                        $optionsJeda = [5, 8, 10, 15];
+                                        if (!in_array($belJedaSetting, $optionsJeda)) {
+                                            $optionsJeda[] = $belJedaSetting;
+                                            sort($optionsJeda);
+                                        }
+                                        foreach ($optionsJeda as $detik) {
+                                            $sel = ($detik == $belJedaSetting) ? 'selected' : '';
+                                            echo "<option value=\"$detik\" $sel>{$detik} Detik</option>";
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                                 <div>
@@ -572,59 +594,120 @@ try {
             return audioCtx;
         }
 
-        // Mainkan 1 denting bel logam autentik (kristal, gema bersih)
+        // Mainkan 1 denting bel sesuai pilihan suara
         function playBellDing() {
             const ctx = getAudioContext();
             if (!ctx) return;
             const now = ctx.currentTime;
+            const soundType = document.getElementById('selectBunyi') ? document.getElementById('selectBunyi').value : 'kuningan';
 
-            // Harmoni logam lonceng (C6 fundamental + overtones)
-            const partials = [
-                { f: 1046.5, g: 0.70, d: 1.6 },
-                { f: 1568.0, g: 0.45, d: 1.3 },
-                { f: 2093.0, g: 0.35, d: 1.0 },
-                { f: 2637.0, g: 0.22, d: 0.8 },
-                { f: 3136.0, g: 0.15, d: 0.6 }
-            ];
+            if (soundType === 'digital') {
+                // Bel Digital / Ting Elektronik
+                const partials = [1760, 2640, 3520];
+                const master = ctx.createGain();
+                master.gain.setValueAtTime(0.85, now);
+                master.connect(ctx.destination);
 
-            const masterGain = ctx.createGain();
-            masterGain.gain.setValueAtTime(0.95, now);
-            masterGain.connect(ctx.destination);
+                partials.forEach((f, i) => {
+                    const osc = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    osc.type = i === 0 ? 'sine' : 'triangle';
+                    osc.frequency.setValueAtTime(f, now);
+                    g.gain.setValueAtTime(0.001, now);
+                    g.gain.linearRampToValueAtTime(0.4 / (i + 1), now + 0.002);
+                    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+                    osc.connect(g);
+                    g.connect(master);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                });
+            } else if (soundType === 'gong') {
+                // Nada Gong / Singing Bell: frekuensi rendah & berwibawa
+                const freqs = [440, 554.37, 659.25, 880];
+                const master = ctx.createGain();
+                master.gain.setValueAtTime(0.9, now);
+                master.connect(ctx.destination);
 
-            // Ketukan palu logam (attack transient)
-            try {
-                const bufferSize = Math.floor(ctx.sampleRate * 0.015);
-                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
-                }
-                const noise = ctx.createBufferSource();
-                noise.buffer = buffer;
-                const noiseGain = ctx.createGain();
-                noiseGain.gain.setValueAtTime(0.35, now);
-                noiseGain.connect(masterGain);
-                noise.start(now);
-            } catch(e) {}
+                freqs.forEach((f, i) => {
+                    const osc = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now);
+                    g.gain.setValueAtTime(0.001, now);
+                    g.gain.linearRampToValueAtTime(0.5 / (i + 1), now + 0.008);
+                    g.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+                    osc.connect(g);
+                    g.connect(master);
+                    osc.start(now);
+                    osc.stop(now + 2.3);
+                });
+            } else if (soundType === 'tabung') {
+                // Lonceng Tabung / Tubular Chime: merdu bertingkat
+                const freqs = [1318.5, 1760, 2637];
+                const master = ctx.createGain();
+                master.gain.setValueAtTime(0.9, now);
+                master.connect(ctx.destination);
 
-            // Partials gema denting bel
-            partials.forEach((p, idx) => {
-                const osc = ctx.createOscillator();
-                const gainNode = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(p.f, now);
-                osc.detune.setValueAtTime((idx - 2) * 5, now);
+                freqs.forEach((f, i) => {
+                    const osc = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now);
+                    g.gain.setValueAtTime(0.001, now);
+                    g.gain.linearRampToValueAtTime(0.45 / (i + 1), now + 0.005);
+                    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+                    osc.connect(g);
+                    g.connect(master);
+                    osc.start(now);
+                    osc.stop(now + 1.9);
+                });
+            } else {
+                // Default: Lonceng Kuningan / Brass Bell Klasik MHQ
+                const partials = [
+                    { f: 1046.5, g: 0.70, d: 1.6 },
+                    { f: 1568.0, g: 0.45, d: 1.3 },
+                    { f: 2093.0, g: 0.35, d: 1.0 },
+                    { f: 2637.0, g: 0.22, d: 0.8 },
+                    { f: 3136.0, g: 0.15, d: 0.6 }
+                ];
 
-                gainNode.gain.setValueAtTime(0.001, now);
-                gainNode.gain.linearRampToValueAtTime(p.g, now + 0.004);
-                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + p.d);
+                const masterGain = ctx.createGain();
+                masterGain.gain.setValueAtTime(0.95, now);
+                masterGain.connect(ctx.destination);
 
-                osc.connect(gainNode);
-                gainNode.connect(masterGain);
+                try {
+                    const bufferSize = Math.floor(ctx.sampleRate * 0.015);
+                    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+                    }
+                    const noise = ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const noiseGain = ctx.createGain();
+                    noiseGain.gain.setValueAtTime(0.35, now);
+                    noiseGain.connect(masterGain);
+                    noise.start(now);
+                } catch(e) {}
 
-                osc.start(now);
-                osc.stop(now + p.d + 0.05);
-            });
+                partials.forEach((p, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(p.f, now);
+                    osc.detune.setValueAtTime((idx - 2) * 5, now);
+
+                    gainNode.gain.setValueAtTime(0.001, now);
+                    gainNode.gain.linearRampToValueAtTime(p.g, now + 0.004);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + p.d);
+
+                    osc.connect(gainNode);
+                    gainNode.connect(masterGain);
+
+                    osc.start(now);
+                    osc.stop(now + p.d + 0.05);
+                });
+            }
         }
 
         // Bunyikan bel N kali berurutan
@@ -664,7 +747,7 @@ try {
         let errorCount = 0;
         let countdownTimerId = null;
         let countdownRemaining = 0;
-        let countdownTotal = 8;
+        let countdownTotal = <?php echo $belJedaSetting; ?>;
 
         function showStatus(text, type = 'primary') {
             const el = document.getElementById('belStatusText');
