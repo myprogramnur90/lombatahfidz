@@ -190,7 +190,12 @@ if ($_POST) {
                                 <p class="text-muted mb-0">Spesialisasi: <span class="spesialisasi-badge"><?php echo htmlspecialchars($spes_display); ?></span></p>
                             </div>
                             <div class="text-end">
-                                <h5 class="mb-1"><?php echo htmlspecialchars($peserta['nama_lengkap']); ?></h5>
+                                <h5 class="mb-1">
+                                    <?php if (!empty($peserta['no_urut'])): ?>
+                                        <span class="badge bg-primary me-1">No. <?php echo str_pad($peserta['no_urut'], 2, '0', STR_PAD_LEFT); ?></span>
+                                    <?php endif; ?>
+                                    <?php echo htmlspecialchars($peserta['nama_lengkap']); ?>
+                                </h5>
                                 <p class="text-muted mb-0"><?php echo htmlspecialchars($peserta['nama_sekolah']); ?></p>
                                 <small class="text-muted">NISN: <?php echo htmlspecialchars($peserta['nisn']); ?></small>
                             </div>

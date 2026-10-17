@@ -19,7 +19,33 @@ $juri = $stmt_juri->fetch();
 
 // Keyword pencarian
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
-$like = "%" . $q . "%";
+
+// Helper pencarian multi-kata, nama, nisn, sekolah, kelas, dan nomor urut
+if (!function_exists('buildPesertaSearchClause')) {
+    function buildPesertaSearchClause($q, &$params) {
+        $q = trim($q);
+        if ($q === '') return '';
+        $words = preg_split('/\s+/', $q);
+        $clauses = [];
+        foreach ($words as $word) {
+            $word = trim($word);
+            if ($word === '') continue;
+            $sub = "(p.nama_lengkap LIKE ? OR p.nisn LIKE ? OR s.nama_sekolah LIKE ? OR p.kelas LIKE ?";
+            $params[] = "%$word%";
+            $params[] = "%$word%";
+            $params[] = "%$word%";
+            $params[] = "%$word%";
+            $cleanNum = preg_replace('/^(?:no\.?|nomor|#)\s*/i', '', $word);
+            if (is_numeric($cleanNum)) {
+                $sub .= " OR p.no_urut = ?";
+                $params[] = (int)$cleanNum;
+            }
+            $sub .= ")";
+            $clauses[] = $sub;
+        }
+        return !empty($clauses) ? " AND (" . implode(" AND ", $clauses) . ")" : '';
+    }
+}
 
 // Hitung statistik penilaian untuk semua peserta diterima
 $query_stats = "
@@ -44,40 +70,40 @@ $stmt_stats_final->execute([$juri_id, $juri_id]);
 $stats_final = $stmt_stats_final->fetch();
 
 // Ambil daftar peserta belum dinilai oleh juri ini
+$params_belum = [$juri_id];
+$where_search_belum = buildPesertaSearchClause($q, $params_belum);
+$limit_belum = ($q !== '') ? "LIMIT 50" : "LIMIT 10";
+
 $query_belum = "
-    SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut
+    SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut, p.kelas
     FROM peserta p
     JOIN sekolah s ON p.sekolah_id = s.id
     WHERE p.status = 'Diterima' AND p.id NOT IN (
         SELECT peserta_id FROM penilaian WHERE juri_id = ?
-    ) " . ($q !== '' ? "AND (p.nama_lengkap LIKE ? OR p.nisn LIKE ? OR s.nama_sekolah LIKE ?)" : "") . "
+    ) $where_search_belum
     ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.nama_lengkap ASC
-    LIMIT 10
+    $limit_belum
 ";
 $stmt_belum = $pdo->prepare($query_belum);
-if ($q !== '') {
-    $stmt_belum->execute([$juri_id, $like, $like, $like]);
-} else {
-    $stmt_belum->execute([$juri_id]);
-}
+$stmt_belum->execute($params_belum);
 $peserta_belum_dinilai = $stmt_belum->fetchAll();
 
 // Ambil daftar peserta sudah dinilai oleh juri ini
+$params_sudah = [$juri_id];
+$where_search_sudah = buildPesertaSearchClause($q, $params_sudah);
+$limit_sudah = ($q !== '') ? "LIMIT 50" : "LIMIT 10";
+
 $query_sudah = "
-    SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, pen.skor_spesialisasi as skor_keseluruhan, pen.tanggal_penilaian
+    SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut, p.kelas, pen.skor_spesialisasi as skor_keseluruhan, pen.tanggal_penilaian
     FROM penilaian pen
     JOIN peserta p ON pen.peserta_id = p.id
     JOIN sekolah s ON p.sekolah_id = s.id
-    WHERE pen.juri_id = ? " . ($q !== '' ? "AND (p.nama_lengkap LIKE ? OR p.nisn LIKE ? OR s.nama_sekolah LIKE ?)" : "") . "
+    WHERE pen.juri_id = ? $where_search_sudah
     ORDER BY pen.tanggal_penilaian DESC
-    LIMIT 10
+    $limit_sudah
 ";
 $stmt_sudah = $pdo->prepare($query_sudah);
-if ($q !== '') {
-    $stmt_sudah->execute([$juri_id, $like, $like, $like]);
-} else {
-    $stmt_sudah->execute([$juri_id]);
-}
+$stmt_sudah->execute($params_sudah);
 $peserta_sudah_dinilai = $stmt_sudah->fetchAll();
 ?>
 
@@ -241,10 +267,10 @@ $peserta_sudah_dinilai = $stmt_sudah->fetchAll();
                             ); ?></span>
                             <form class="mt-3" method="GET" action="dashboard.php">
                                 <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Cari nama, NISN, atau sekolah..." name="q" value="<?php echo htmlspecialchars($q); ?>">
-                                    <button class="btn btn-outline-light" type="submit"><i class="fas fa-search"></i></button>
+                                    <input type="text" class="form-control" placeholder="Cari nama, No. Urut, NISN, sekolah, atau kelas..." name="q" value="<?php echo htmlspecialchars($q); ?>">
+                                    <button class="btn btn-primary" type="submit"><i class="fas fa-search me-1"></i>Cari</button>
                                     <?php if ($q !== ''): ?>
-                                        <a class="btn btn-outline-light" href="dashboard.php"><i class="fas fa-times"></i></a>
+                                        <a class="btn btn-secondary" href="dashboard.php" title="Hapus filter pencarian"><i class="fas fa-times me-1"></i>Reset</a>
                                     <?php endif; ?>
                                 </div>
                             </form>
@@ -259,6 +285,16 @@ $peserta_sudah_dinilai = $stmt_sudah->fetchAll();
                 </div>
             </div>
         </div>
+
+        <?php if ($q !== ''): ?>
+            <div class="alert alert-info d-flex justify-content-between align-items-center mb-4" style="border-radius: 12px;">
+                <div>
+                    <i class="fas fa-search me-2"></i>Hasil pencarian untuk: <strong>"<?php echo htmlspecialchars($q); ?>"</strong>
+                    <span class="badge bg-primary ms-2"><?php echo count($peserta_belum_dinilai) + count($peserta_sudah_dinilai); ?> peserta ditemukan</span>
+                </div>
+                <a href="dashboard.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times me-1"></i>Hapus Filter</a>
+            </div>
+        <?php endif; ?>
 
         <!-- Statistik -->
         <div class="row mb-4">
@@ -408,9 +444,15 @@ $peserta_sudah_dinilai = $stmt_sudah->fetchAll();
                             </div>
                         <?php else: ?>
                             <div class="text-center py-4">
-                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                                <h5>Semua peserta sudah dinilai!</h5>
-                                <p class="text-muted">Tidak ada peserta yang belum dinilai.</p>
+                                <?php if ($q !== ''): ?>
+                                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                    <h5>Tidak ada peserta belum dinilai yang cocok</h5>
+                                    <p class="text-muted">Tidak ditemukan peserta belum dinilai dengan kata kunci "<?php echo htmlspecialchars($q); ?>".</p>
+                                <?php else: ?>
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                    <h5>Semua peserta sudah dinilai!</h5>
+                                    <p class="text-muted">Tidak ada peserta yang belum dinilai.</p>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -442,6 +484,9 @@ $peserta_sudah_dinilai = $stmt_sudah->fetchAll();
                                         <?php foreach ($peserta_sudah_dinilai as $peserta): ?>
                                             <tr>
                                                 <td>
+                                                    <?php if (!empty($peserta['no_urut'])): ?>
+                                                        <span class="badge bg-primary me-1">No. <?php echo str_pad($peserta['no_urut'], 2, '0', STR_PAD_LEFT); ?></span>
+                                                    <?php endif; ?>
                                                     <strong><?php echo htmlspecialchars($peserta['nama_lengkap']); ?></strong>
                                                     <br>
                                                     <small class="text-muted"><?php echo htmlspecialchars($peserta['nisn']); ?></small>
@@ -467,9 +512,15 @@ $peserta_sudah_dinilai = $stmt_sudah->fetchAll();
                             </div>
                         <?php else: ?>
                             <div class="text-center py-4">
-                                <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                                <h5>Belum ada penilaian</h5>
-                                <p class="text-muted">Mulai menilai peserta yang tersedia.</p>
+                                <?php if ($q !== ''): ?>
+                                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                    <h5>Tidak ada peserta sudah dinilai yang cocok</h5>
+                                    <p class="text-muted">Tidak ditemukan riwayat penilaian dengan kata kunci "<?php echo htmlspecialchars($q); ?>".</p>
+                                <?php else: ?>
+                                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                                    <h5>Belum ada penilaian</h5>
+                                    <p class="text-muted">Mulai menilai peserta yang tersedia.</p>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                     </div>

@@ -192,6 +192,9 @@ $stats = $stmt_stats->fetch();
                                     <tr>
                                         <td><?php echo $no++; ?></td>
                                         <td>
+                                            <?php if (!empty($riwayat['no_urut'])): ?>
+                                                <span class="badge bg-primary me-1">No. <?php echo str_pad($riwayat['no_urut'], 2, '0', STR_PAD_LEFT); ?></span>
+                                            <?php endif; ?>
                                             <strong><?php echo htmlspecialchars($riwayat['nama_lengkap']); ?></strong>
                                             <br>
                                             <small class="text-muted"><?php echo htmlspecialchars($riwayat['nisn']); ?></small>

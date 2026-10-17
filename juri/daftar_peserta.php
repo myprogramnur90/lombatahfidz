@@ -12,9 +12,38 @@ $juri_id = $_SESSION['juri_id'];
 
 // Keyword pencarian
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
-$like = "%" . $q . "%";
+
+// Helper pencarian multi-kata, nama, nisn, sekolah, kelas, dan nomor urut
+if (!function_exists('buildPesertaSearchClause')) {
+    function buildPesertaSearchClause($q, &$params) {
+        $q = trim($q);
+        if ($q === '') return '';
+        $words = preg_split('/\s+/', $q);
+        $clauses = [];
+        foreach ($words as $word) {
+            $word = trim($word);
+            if ($word === '') continue;
+            $sub = "(p.nama_lengkap LIKE ? OR p.nisn LIKE ? OR s.nama_sekolah LIKE ? OR p.kelas LIKE ?";
+            $params[] = "%$word%";
+            $params[] = "%$word%";
+            $params[] = "%$word%";
+            $params[] = "%$word%";
+            $cleanNum = preg_replace('/^(?:no\.?|nomor|#)\s*/i', '', $word);
+            if (is_numeric($cleanNum)) {
+                $sub .= " OR p.no_urut = ?";
+                $params[] = (int)$cleanNum;
+            }
+            $sub .= ")";
+            $clauses[] = $sub;
+        }
+        return !empty($clauses) ? " AND (" . implode(" AND ", $clauses) . ")" : '';
+    }
+}
 
 // Ambil daftar semua peserta yang diterima
+$params_peserta = [$juri_id];
+$search_clause = buildPesertaSearchClause($q, $params_peserta);
+
 $query_peserta = "
     SELECT 
         p.*, 
@@ -25,15 +54,11 @@ $query_peserta = "
     FROM peserta p
     JOIN sekolah s ON p.sekolah_id = s.id
     LEFT JOIN penilaian pen ON p.id = pen.peserta_id AND pen.juri_id = ?
-    WHERE p.status = 'Diterima' " . ($q !== '' ? "AND (p.nama_lengkap LIKE ? OR p.nisn LIKE ? OR s.nama_sekolah LIKE ?)" : "") . "
+    WHERE p.status = 'Diterima' " . $search_clause . "
     ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.nama_lengkap ASC
 ";
 $stmt_peserta = $pdo->prepare($query_peserta);
-if ($q !== '') {
-    $stmt_peserta->execute([$juri_id, $like, $like, $like]);
-} else {
-    $stmt_peserta->execute([$juri_id]);
-}
+$stmt_peserta->execute($params_peserta);
 $peserta_list = $stmt_peserta->fetchAll();
 ?>
 
@@ -103,13 +128,21 @@ $peserta_list = $stmt_peserta->fetchAll();
                         <p class="text-muted mb-0">Daftar peserta yang telah diterima untuk dinilai</p>
                         <form class="mt-3" method="GET" action="daftar_peserta.php">
                             <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Cari nama, NISN, atau sekolah..." name="q" value="<?php echo htmlspecialchars($q); ?>">
-                                <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search"></i></button>
+                                <input type="text" class="form-control" placeholder="Cari nama, No. Urut, NISN, atau sekolah..." name="q" value="<?php echo htmlspecialchars($q); ?>">
+                                <button class="btn btn-primary" type="submit"><i class="fas fa-search me-1"></i> Cari</button>
                                 <?php if ($q !== ''): ?>
-                                    <a class="btn btn-outline-secondary" href="daftar_peserta.php"><i class="fas fa-times"></i></a>
+                                    <a class="btn btn-secondary" href="daftar_peserta.php" title="Reset Pencarian"><i class="fas fa-times me-1"></i> Reset</a>
                                 <?php endif; ?>
                             </div>
                         </form>
+                        <?php if ($q !== ''): ?>
+                            <div class="alert alert-info d-flex align-items-center justify-content-between mt-3 py-2 px-3 mb-0">
+                                <div>
+                                    <i class="fas fa-info-circle me-1"></i> Menampilkan hasil pencarian untuk "<strong><?php echo htmlspecialchars($q); ?></strong>" (Ditemukan: <?php echo count($peserta_list); ?> peserta)
+                                </div>
+                                <a href="daftar_peserta.php" class="btn btn-sm btn-outline-dark">Tampilkan Semua</a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -193,9 +226,15 @@ $peserta_list = $stmt_peserta->fetchAll();
                             <?php else: ?>
                                 <tr>
                                     <td colspan="8" class="text-center py-4">
-                                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                                        <h5>Belum ada peserta</h5>
-                                        <p class="text-muted">Belum ada peserta yang diterima untuk dinilai.</p>
+                                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                        <?php if ($q !== ''): ?>
+                                            <h5>Tidak Ada Peserta yang Cocok</h5>
+                                            <p class="text-muted">Tidak ditemukan peserta dengan kata kunci "<strong><?php echo htmlspecialchars($q); ?></strong>".</p>
+                                            <a href="daftar_peserta.php" class="btn btn-secondary btn-sm mt-2"><i class="fas fa-arrow-left me-1"></i> Tampilkan Semua Peserta</a>
+                                        <?php else: ?>
+                                            <h5>Belum ada peserta</h5>
+                                            <p class="text-muted">Belum ada peserta yang diterima untuk dinilai.</p>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endif; ?>
