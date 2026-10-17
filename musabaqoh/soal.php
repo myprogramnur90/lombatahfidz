@@ -300,6 +300,126 @@ try {
             <?php endif; ?>
 
             <!-- =============================================================== -->
+            <!-- TAMPILAN SOAL JUZ 30 -->
+            <!-- =============================================================== -->
+            <div class="soal-display">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <h3 class="mb-0"><i class="fas fa-list-ol me-2 text-primary"></i>Soal Nomor <?php echo $soal['no_soal']; ?> - Juz 30</h3>
+                    <span class="badge bg-primary fs-6">3 Soal</span>
+                </div>
+                
+                <?php if ($jenis_soal === 'final'): ?>
+                    <!-- Soal Final: Sambung Ayat, Tebak Surah, Sambung Surah -->
+                    <div class="soal-item" id="soalItem1" data-step="1">
+                        <div class="soal-title d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-info me-2">
+                                    <i class="fas fa-arrow-right"></i>
+                                    Soal 1
+                                </span>
+                                (Sambung Ayat)
+                            </div>
+                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal1">Menunggu</span>
+                        </div>
+                        <div class="soal-content">
+                            <?php echo htmlspecialchars($soal['soal1']); ?>
+                        </div>
+                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 3x untuk pindah ke Soal 2</div>
+                    </div>
+                    
+                    <div class="soal-item hidden-soft" id="soalItem2" data-step="2">
+                        <div class="soal-title d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-success me-2">
+                                    <i class="fas fa-book"></i>
+                                    Soal 2
+                                </span>
+                                (Tebak Surat)
+                            </div>
+                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal2">Menunggu</span>
+                        </div>
+                        <div class="soal-content">
+                            <?php
+                                $soal2Text = is_string($soal['soal2']) ? $soal['soal2'] : '';
+                                $soal2Text = preg_replace('/^\s*Sambung\s*Ayat\s*-\s*/i', 'Tebak Surat - ', $soal2Text);
+                                echo htmlspecialchars($soal2Text);
+                            ?>
+                        </div>
+                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 3x untuk pindah ke Soal 3</div>
+                    </div>
+                    
+                    <div class="soal-item hidden-soft" id="soalItem3" data-step="3">
+                        <div class="soal-title d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-warning me-2">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    Soal 3
+                                </span>
+                                (Sambung Surah)
+                            </div>
+                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal3">Menunggu</span>
+                        </div>
+                        <div class="soal-content">
+                            <?php echo htmlspecialchars($soal['soal3']); ?>
+                        </div>
+                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 4x untuk mengakhiri lomba</div>
+                    </div>
+                <?php else: ?>
+                    <!-- Soal Penyisihan: 2 Sambung Ayat + 1 Sambung Surat -->
+                    <div class="soal-item" id="soalItem1" data-step="1">
+                        <div class="soal-title d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-info me-2">
+                                    <i class="fas fa-arrow-right"></i>
+                                    Soal 1
+                                </span>
+                                (Sambung Ayat)
+                            </div>
+                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal1">Menunggu</span>
+                        </div>
+                        <div class="soal-content">
+                            <?php echo htmlspecialchars($soal['soal1']); ?>
+                        </div>
+                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 3x untuk pindah ke Soal 2</div>
+                    </div>
+                    
+                    <div class="soal-item hidden-soft" id="soalItem2" data-step="2">
+                        <div class="soal-title d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-info me-2">
+                                    <i class="fas fa-arrow-right"></i>
+                                    Soal 2
+                                </span>
+                                (Sambung Ayat)
+                            </div>
+                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal2">Menunggu</span>
+                        </div>
+                        <div class="soal-content">
+                            <?php echo htmlspecialchars($soal['soal2']); ?>
+                        </div>
+                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 3x untuk pindah ke Soal 3</div>
+                    </div>
+                    
+                    <div class="soal-item hidden-soft" id="soalItem3" data-step="3">
+                        <div class="soal-title d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-warning me-2">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    Soal 3
+                                </span>
+                                (Sambung Surat)
+                            </div>
+                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal3">Menunggu</span>
+                        </div>
+                        <div class="soal-content">
+                            <?php echo htmlspecialchars($soal['soal3']); ?>
+                        </div>
+                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 4x untuk mengakhiri lomba</div>
+                    </div>
+                <?php endif; ?>
+            </div>
+            
+<!-- =============================================================== -->
             <!-- PANEL KONTROL BEL MUSABAQOH (PROTOKOL RESMI MHQ) -->
             <!-- =============================================================== -->
             <div class="card bel-panel-card mb-4">
@@ -423,126 +543,6 @@ try {
                 </div>
             </div>
 
-            <!-- =============================================================== -->
-            <!-- TAMPILAN SOAL JUZ 30 -->
-            <!-- =============================================================== -->
-            <div class="soal-display">
-                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                    <h3 class="mb-0"><i class="fas fa-list-ol me-2 text-primary"></i>Soal Nomor <?php echo $soal['no_soal']; ?> - Juz 30</h3>
-                    <span class="badge bg-primary fs-6">3 Soal</span>
-                </div>
-                
-                <?php if ($jenis_soal === 'final'): ?>
-                    <!-- Soal Final: Sambung Ayat, Tebak Surah, Sambung Surah -->
-                    <div class="soal-item" id="soalItem1" data-step="1">
-                        <div class="soal-title d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-info me-2">
-                                    <i class="fas fa-arrow-right"></i>
-                                    Soal 1
-                                </span>
-                                (Sambung Ayat)
-                            </div>
-                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal1">Menunggu</span>
-                        </div>
-                        <div class="soal-content">
-                            <?php echo htmlspecialchars($soal['soal1']); ?>
-                        </div>
-                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 3x untuk pindah ke Soal 2</div>
-                    </div>
-                    
-                    <div class="soal-item hidden-soft" id="soalItem2" data-step="2">
-                        <div class="soal-title d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-success me-2">
-                                    <i class="fas fa-book"></i>
-                                    Soal 2
-                                </span>
-                                (Tebak Surat)
-                            </div>
-                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal2">Menunggu</span>
-                        </div>
-                        <div class="soal-content">
-                            <?php
-                                $soal2Text = is_string($soal['soal2']) ? $soal['soal2'] : '';
-                                $soal2Text = preg_replace('/^\s*Sambung\s*Ayat\s*-\s*/i', 'Tebak Surat - ', $soal2Text);
-                                echo htmlspecialchars($soal2Text);
-                            ?>
-                        </div>
-                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 3x untuk pindah ke Soal 3</div>
-                    </div>
-                    
-                    <div class="soal-item hidden-soft" id="soalItem3" data-step="3">
-                        <div class="soal-title d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-warning me-2">
-                                    <i class="fas fa-exchange-alt"></i>
-                                    Soal 3
-                                </span>
-                                (Sambung Surah)
-                            </div>
-                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal3">Menunggu</span>
-                        </div>
-                        <div class="soal-content">
-                            <?php echo htmlspecialchars($soal['soal3']); ?>
-                        </div>
-                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 4x untuk mengakhiri lomba</div>
-                    </div>
-                <?php else: ?>
-                    <!-- Soal Penyisihan: 2 Sambung Ayat + 1 Sambung Surat -->
-                    <div class="soal-item" id="soalItem1" data-step="1">
-                        <div class="soal-title d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-info me-2">
-                                    <i class="fas fa-arrow-right"></i>
-                                    Soal 1
-                                </span>
-                                (Sambung Ayat)
-                            </div>
-                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal1">Menunggu</span>
-                        </div>
-                        <div class="soal-content">
-                            <?php echo htmlspecialchars($soal['soal1']); ?>
-                        </div>
-                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 3x untuk pindah ke Soal 2</div>
-                    </div>
-                    
-                    <div class="soal-item hidden-soft" id="soalItem2" data-step="2">
-                        <div class="soal-title d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-info me-2">
-                                    <i class="fas fa-arrow-right"></i>
-                                    Soal 2
-                                </span>
-                                (Sambung Ayat)
-                            </div>
-                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal2">Menunggu</span>
-                        </div>
-                        <div class="soal-content">
-                            <?php echo htmlspecialchars($soal['soal2']); ?>
-                        </div>
-                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 3x untuk pindah ke Soal 3</div>
-                    </div>
-                    
-                    <div class="soal-item hidden-soft" id="soalItem3" data-step="3">
-                        <div class="soal-title d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-warning me-2">
-                                    <i class="fas fa-exchange-alt"></i>
-                                    Soal 3
-                                </span>
-                                (Sambung Surat)
-                            </div>
-                            <span class="badge bg-light text-dark status-badge-item" id="badgeSoal3">Menunggu</span>
-                        </div>
-                        <div class="soal-content">
-                            <?php echo htmlspecialchars($soal['soal3']); ?>
-                        </div>
-                        <div class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i>Tekan Bel 4x untuk mengakhiri lomba</div>
-                    </div>
-                <?php endif; ?>
-            </div>
-            
             <!-- Controls -->
             <div class="controls">
                 <a href="#" onclick="kembaliDanClear(); return false;" class="btn btn-custom">
