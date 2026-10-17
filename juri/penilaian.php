@@ -21,7 +21,7 @@ $query_peserta = "
     SELECT p.*, s.nama_sekolah
     FROM peserta p
     JOIN sekolah s ON p.sekolah_id = s.id
-    WHERE p.id = ? AND p.status = 'Diterima'
+    WHERE p.id = ? AND p.status != 'Ditolak'
 ";
 $stmt_peserta = $pdo->prepare($query_peserta);
 $stmt_peserta->execute([$peserta_id]);

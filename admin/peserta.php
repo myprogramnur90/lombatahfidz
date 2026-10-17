@@ -123,6 +123,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
+// Proses approve SEMUA peserta yang berstatus Pending
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'approve_all_pending') {
+    try {
+        $stmtSekolah = $pdo->query("SELECT DISTINCT sekolah_id FROM peserta WHERE status = 'Pending'");
+        $sekolahIds = $stmtSekolah->fetchAll(PDO::FETCH_COLUMN);
+
+        $stmt = $pdo->prepare("UPDATE peserta SET status = 'Diterima' WHERE status = 'Pending'");
+        $stmt->execute();
+        $approvedCount = $stmt->rowCount();
+
+        if (!empty($sekolahIds)) {
+            $inClause = implode(',', array_map('intval', $sekolahIds));
+            $pdo->exec("UPDATE pembayaran SET status_pembayaran = 'Lunas' WHERE sekolah_id IN ($inClause)");
+            $pdo->exec("UPDATE dokumen_berka SET status_dokumen = 'Diterima' WHERE sekolah_id IN ($inClause)");
+        }
+
+        $success = "Berhasil menyetujui $approvedCount peserta pending menjadi 'Diterima'! Semua pembayaran dan berkas otomatis divalidasi.";
+    } catch (PDOException $e) {
+        $error = 'Terjadi kesalahan dalam menyetujui peserta: ' . $e->getMessage();
+    }
+}
+
 // Proses tambah peserta
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add') {
     $sekolah_id = $_POST['sekolah_id'];
@@ -145,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             if ($stmt->fetch()) {
                 $error = 'NISN sudah terdaftar!';
             } else {
-                $stmt = $pdo->prepare("INSERT INTO peserta (sekolah_id, nama_lengkap, nisn, tempat_lahir, tanggal_lahir, jenis_kelamin, kelas, no_hp, alamat, no_urut, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')");
+                $stmt = $pdo->prepare("INSERT INTO peserta (sekolah_id, nama_lengkap, nisn, tempat_lahir, tanggal_lahir, jenis_kelamin, kelas, no_hp, alamat, no_urut, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Diterima')");
                 $stmt->execute([$sekolah_id, $nama_lengkap, $nisn, $tempat_lahir, $tanggal_lahir, $jenis_kelamin, $kelas, $no_hp, $alamat, $no_urut]);
                 $success = 'Peserta berhasil ditambahkan!';
             }
@@ -301,6 +323,15 @@ try {
                             <button class="btn btn-info text-white btn-action" data-bs-toggle="modal" data-bs-target="#importPesertaModal">
                                 <i class="fas fa-file-import me-2"></i>Import Excel
                             </button>
+                            <?php if ($pendingCount > 0): ?>
+                            <form method="POST" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menyetujui SEMUA <?php echo $pendingCount; ?> peserta berstatus Pending sekaligus? Status akan berubah menjadi Diterima.');">
+                                <?php echo getCsrfInput(); ?>
+                                <input type="hidden" name="action" value="approve_all_pending">
+                                <button type="submit" class="btn btn-warning text-dark btn-action" title="Setujui Semua Peserta Pending">
+                                    <i class="fas fa-check-double me-2"></i>Setujui Semua (<?php echo $pendingCount; ?> Pending)
+                                </button>
+                            </form>
+                            <?php endif; ?>
                             <button class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#addPesertaModal">
                                 <i class="fas fa-plus me-2"></i>Tambah Peserta
                             </button>

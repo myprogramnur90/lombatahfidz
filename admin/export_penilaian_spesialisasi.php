@@ -24,7 +24,7 @@ $query = "
     JOIN sekolah s ON p.sekolah_id = s.id
     LEFT JOIN penilaian pen ON p.id = pen.peserta_id
     LEFT JOIN juri j ON pen.juri_id = j.id
-    WHERE p.status = 'Diterima'
+    WHERE p.status != 'Ditolak'
     GROUP BY p.id, p.nama_lengkap, p.nisn, s.nama_sekolah
         , (0.4 * COALESCE(MAX(CASE WHEN j.spesialisasi IN ('Kelancaran Hafalan','Kelancaran (Tahfidz)') THEN pen.skor_spesialisasi END), 0)
            + 0.4 * COALESCE(MAX(CASE WHEN j.spesialisasi IN ('Makhraj','Makhraj Tajwid') THEN pen.skor_spesialisasi END), 0)

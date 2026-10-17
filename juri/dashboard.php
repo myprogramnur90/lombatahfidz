@@ -50,9 +50,9 @@ if (!function_exists('buildPesertaSearchClause')) {
 // Hitung statistik penilaian untuk semua peserta diterima
 $query_stats = "
     SELECT 
-        (SELECT COUNT(*) FROM peserta WHERE status = 'Diterima') as total_peserta,
+        (SELECT COUNT(*) FROM peserta WHERE status != 'Ditolak') as total_peserta,
         (SELECT COUNT(*) FROM penilaian WHERE juri_id = ?) as sudah_dinilai,
-        ((SELECT COUNT(*) FROM peserta WHERE status = 'Diterima') - (SELECT COUNT(*) FROM penilaian WHERE juri_id = ?)) as belum_dinilai
+        ((SELECT COUNT(*) FROM peserta WHERE status != 'Ditolak') - (SELECT COUNT(*) FROM penilaian WHERE juri_id = ?)) as belum_dinilai
 ";
 $stmt_stats = $pdo->prepare($query_stats);
 $stmt_stats->execute([$juri_id, $juri_id]);
@@ -72,13 +72,13 @@ $stats_final = $stmt_stats_final->fetch();
 // Ambil daftar peserta belum dinilai oleh juri ini
 $params_belum = [$juri_id];
 $where_search_belum = buildPesertaSearchClause($q, $params_belum);
-$limit_belum = ($q !== '') ? "LIMIT 50" : "LIMIT 10";
+$limit_belum = ($q !== '') ? "LIMIT 100" : "LIMIT 100";
 
 $query_belum = "
     SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut, p.kelas
     FROM peserta p
     JOIN sekolah s ON p.sekolah_id = s.id
-    WHERE p.status = 'Diterima' AND p.id NOT IN (
+    WHERE p.status != 'Ditolak' AND p.id NOT IN (
         SELECT peserta_id FROM penilaian WHERE juri_id = ?
     ) $where_search_belum
     ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.nama_lengkap ASC
@@ -91,7 +91,7 @@ $peserta_belum_dinilai = $stmt_belum->fetchAll();
 // Ambil daftar peserta sudah dinilai oleh juri ini
 $params_sudah = [$juri_id];
 $where_search_sudah = buildPesertaSearchClause($q, $params_sudah);
-$limit_sudah = ($q !== '') ? "LIMIT 50" : "LIMIT 10";
+$limit_sudah = ($q !== '') ? "LIMIT 100" : "LIMIT 100";
 
 $query_sudah = "
     SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut, p.kelas, pen.skor_spesialisasi as skor_keseluruhan, pen.tanggal_penilaian

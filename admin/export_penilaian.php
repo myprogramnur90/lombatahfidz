@@ -27,7 +27,7 @@ $query = "
     JOIN sekolah s ON p.sekolah_id = s.id
     LEFT JOIN penilaian pen ON p.id = pen.peserta_id
     LEFT JOIN juri j ON pen.juri_id = j.id
-    WHERE p.status = 'Diterima'
+    WHERE p.status != 'Ditolak'
     GROUP BY p.id, p.nama_lengkap, p.nisn, s.nama_sekolah
     ORDER BY skor_terbobot DESC
 ";

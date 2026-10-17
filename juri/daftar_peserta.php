@@ -54,7 +54,7 @@ $query_peserta = "
     FROM peserta p
     JOIN sekolah s ON p.sekolah_id = s.id
     LEFT JOIN penilaian pen ON p.id = pen.peserta_id AND pen.juri_id = ?
-    WHERE p.status = 'Diterima' " . $search_clause . "
+    WHERE p.status != 'Ditolak' " . $search_clause . "
     ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.nama_lengkap ASC
 ";
 $stmt_peserta = $pdo->prepare($query_peserta);

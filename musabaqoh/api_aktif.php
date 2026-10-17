@@ -112,7 +112,7 @@ if ($action === 'peserta_list') {
             SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut
             FROM peserta p
             JOIN sekolah s ON p.sekolah_id = s.id
-            WHERE p.status = 'Diterima'
+            WHERE p.status != 'Ditolak'
             ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.nama_lengkap ASC
         ");
         $peserta = $stmt->fetchAll();

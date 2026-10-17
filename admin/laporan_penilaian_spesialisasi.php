@@ -26,7 +26,7 @@ $query_laporan = "
     JOIN sekolah s ON p.sekolah_id = s.id
     LEFT JOIN penilaian pen ON p.id = pen.peserta_id
     LEFT JOIN juri j ON pen.juri_id = j.id
-    WHERE p.status = 'Diterima'
+    WHERE p.status != 'Ditolak'
     GROUP BY p.id, p.nama_lengkap, p.nisn, s.nama_sekolah
     ORDER BY skor_rata_rata DESC, p.nama_lengkap
 ";
@@ -42,7 +42,7 @@ $query_stats = "
         AVG(pen.skor_spesialisasi) as rata_rata_skor
     FROM peserta p
     LEFT JOIN penilaian pen ON p.id = pen.peserta_id
-    WHERE p.status = 'Diterima'
+    WHERE p.status != 'Ditolak'
 ";
 $stats = $pdo->query($query_stats)->fetch();
 

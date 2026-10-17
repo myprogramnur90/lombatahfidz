@@ -208,7 +208,7 @@ if ($jenis_soal === 'final') {
                                         FROM peserta p
                                         JOIN sekolah s ON p.sekolah_id = s.id
                                         $joinFinal
-                                        WHERE p.status = 'Diterima'
+                                        WHERE p.status != 'Ditolak'
                                           AND p.id NOT IN (SELECT peserta_id FROM musabaqoh_aktif WHERE jenis = ?)
                                         ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.nama_lengkap ASC
                                     ");
