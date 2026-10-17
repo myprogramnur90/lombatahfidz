@@ -12,7 +12,7 @@ $jenis = $_GET['jenis'] ?? $_POST['jenis'] ?? 'penyisihan';
 if ($action === 'get') {
     try {
         $stmt = $pdo->prepare("
-            SELECT ma.*, p.nama_lengkap, p.nisn, s.nama_sekolah,
+            SELECT ma.*, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut,
                    sm.soal1, sm.soal2, sm.soal3
             FROM musabaqoh_aktif ma
             LEFT JOIN peserta p ON ma.peserta_id = p.id
@@ -42,6 +42,7 @@ if ($action === 'get') {
                 'status' => 'ok',
                 'data' => [
                     'peserta_id' => $aktif['peserta_id'],
+                    'no_urut' => $aktif['no_urut'],
                     'nama_lengkap' => $aktif['nama_lengkap'],
                     'nisn' => $aktif['nisn'],
                     'nama_sekolah' => $aktif['nama_sekolah'],
@@ -108,11 +109,11 @@ if ($action === 'clear') {
 if ($action === 'peserta_list') {
     try {
         $stmt = $pdo->query("
-            SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah
+            SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut
             FROM peserta p
             JOIN sekolah s ON p.sekolah_id = s.id
             WHERE p.status = 'Diterima'
-            ORDER BY p.nama_lengkap
+            ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.nama_lengkap ASC
         ");
         $peserta = $stmt->fetchAll();
         echo json_encode(['status' => 'ok', 'data' => $peserta]);

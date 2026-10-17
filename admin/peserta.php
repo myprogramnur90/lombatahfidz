@@ -4,6 +4,14 @@ initSecureSession();
 setSecurityHeaders();
 require_once '../config/database.php';
 
+// Pastikan kolom no_urut ada di tabel peserta
+try {
+    $cekCol = $pdo->query("SHOW COLUMNS FROM peserta LIKE 'no_urut'")->fetch();
+    if (!$cekCol) {
+        $pdo->exec("ALTER TABLE peserta ADD COLUMN no_urut INT NULL DEFAULT NULL AFTER kelas");
+    }
+} catch (Exception $e) {}
+
 if (!isset($_SESSION['admin_id'])) {
     header('Location: ../auth/login_admin.php');
     exit();
@@ -31,16 +39,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
+// Proses update nomor urut peserta
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_no_urut') {
+    $peserta_id = (int)($_POST['peserta_id'] ?? 0);
+    $no_urut = (isset($_POST['no_urut']) && trim($_POST['no_urut']) !== '') ? (int)$_POST['no_urut'] : null;
+    
+    try {
+        $stmt = $pdo->prepare("UPDATE peserta SET no_urut = ? WHERE id = ?");
+        $stmt->execute([$no_urut, $peserta_id]);
+        $success = 'Nomor urut peserta berhasil disimpan!';
+    } catch (PDOException $e) {
+        $error = 'Terjadi kesalahan dalam menyimpan nomor urut!';
+    }
+}
+
 // Proses update status peserta
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_status') {
     $peserta_id = $_POST['peserta_id'];
     $status = $_POST['status'];
     $catatan = trim($_POST['catatan']);
+    $no_urut = (isset($_POST['no_urut']) && trim($_POST['no_urut']) !== '') ? (int)$_POST['no_urut'] : null;
     
     try {
         // Update status peserta
-        $stmt = $pdo->prepare("UPDATE peserta SET status = ?, catatan = ? WHERE id = ?");
-        $stmt->execute([$status, $catatan, $peserta_id]);
+        $stmt = $pdo->prepare("UPDATE peserta SET status = ?, catatan = ?, no_urut = ? WHERE id = ?");
+        $stmt->execute([$status, $catatan, $no_urut, $peserta_id]);
         
         // Ambil sekolah_id dari peserta
         $stmt = $pdo->prepare("SELECT sekolah_id FROM peserta WHERE id = ?");
@@ -111,6 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     $kelas = trim($_POST['kelas']);
     $no_hp = trim($_POST['no_hp']);
     $alamat = trim($_POST['alamat']);
+    $no_urut = (isset($_POST['no_urut']) && trim($_POST['no_urut']) !== '') ? (int)$_POST['no_urut'] : null;
     
     if (empty($sekolah_id) || empty($nama_lengkap) || empty($nisn)) {
         $error = 'Sekolah, Nama Lengkap, dan NISN harus diisi!';
@@ -121,8 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             if ($stmt->fetch()) {
                 $error = 'NISN sudah terdaftar!';
             } else {
-                $stmt = $pdo->prepare("INSERT INTO peserta (sekolah_id, nama_lengkap, nisn, tempat_lahir, tanggal_lahir, jenis_kelamin, kelas, no_hp, alamat, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')");
-                $stmt->execute([$sekolah_id, $nama_lengkap, $nisn, $tempat_lahir, $tanggal_lahir, $jenis_kelamin, $kelas, $no_hp, $alamat]);
+                $stmt = $pdo->prepare("INSERT INTO peserta (sekolah_id, nama_lengkap, nisn, tempat_lahir, tanggal_lahir, jenis_kelamin, kelas, no_hp, alamat, no_urut, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')");
+                $stmt->execute([$sekolah_id, $nama_lengkap, $nisn, $tempat_lahir, $tanggal_lahir, $jenis_kelamin, $kelas, $no_hp, $alamat, $no_urut]);
                 $success = 'Peserta berhasil ditambahkan!';
             }
         } catch (PDOException $e) {
@@ -145,6 +169,13 @@ if (isset($_SESSION['import_error'])) {
 $filter_sekolah = isset($_GET['sekolah']) ? $_GET['sekolah'] : '';
 $filter_status = isset($_GET['status']) ? $_GET['status'] : '';
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'no_urut';
+$order_by = "ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.created_at DESC";
+if ($sort === 'terbaru') {
+    $order_by = "ORDER BY p.created_at DESC";
+} elseif ($sort === 'nama') {
+    $order_by = "ORDER BY p.nama_lengkap ASC";
+}
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
@@ -206,7 +237,7 @@ try {
             ) d2 ON d1.sekolah_id = d2.sekolah_id AND d1.created_at = d2.max_created
         ) db ON p.sekolah_id = db.sekolah_id
         $where_clause
-        ORDER BY p.created_at DESC
+        $order_by
         LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
     
     $stmt = $pdo->prepare($query);
@@ -303,7 +334,7 @@ try {
                                         <?php endif; ?>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label for="status" class="form-label">Status</label>
                                     <select class="form-control" id="status" name="status">
                                         <option value="">Semua Status</option>
@@ -312,7 +343,15 @@ try {
                                         <option value="Ditolak" <?php echo $filter_status == 'Ditolak' ? 'selected' : ''; ?>>Ditolak</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
+                                    <label for="sort" class="form-label">Urutkan</label>
+                                    <select class="form-control" id="sort" name="sort">
+                                        <option value="no_urut" <?php echo $sort == 'no_urut' ? 'selected' : ''; ?>>Nomor Urut</option>
+                                        <option value="terbaru" <?php echo $sort == 'terbaru' ? 'selected' : ''; ?>>Terbaru</option>
+                                        <option value="nama" <?php echo $sort == 'nama' ? 'selected' : ''; ?>>Nama (A-Z)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
                                     <label class="form-label">&nbsp;</label>
                                     <div class="d-flex gap-2">
                                         <button type="submit" class="btn btn-primary">
@@ -363,6 +402,7 @@ try {
                                     <thead>
                                         <tr>
                                             <th>No</th>
+                                            <th>No Urut</th>
                                             <th>Nama Peserta</th>
                                             <th>NISN</th>
                                             <th>Sekolah</th>
@@ -383,6 +423,17 @@ try {
                                             <?php foreach ($peserta_list as $index => $peserta): ?>
                                                 <tr>
                                                     <td><?php echo $offset + $index + 1; ?></td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm <?php echo !empty($peserta['no_urut']) ? 'btn-primary' : 'btn-outline-secondary'; ?>" 
+                                                                data-bs-toggle="modal" data-bs-target="#noUrutModal<?php echo $peserta['id']; ?>" 
+                                                                title="Klik untuk atur Nomor Urut">
+                                                            <?php if (!empty($peserta['no_urut'])): ?>
+                                                                <i class="fas fa-hashtag me-1"></i><strong><?php echo str_pad($peserta['no_urut'], 2, '0', STR_PAD_LEFT); ?></strong>
+                                                            <?php else: ?>
+                                                                <span class="text-muted"><i class="fas fa-plus me-1"></i>Set</span>
+                                                            <?php endif; ?>
+                                                        </button>
+                                                    </td>
                                                     <td><?php echo htmlspecialchars($peserta['nama_lengkap']); ?></td>
                                                     <td><?php echo htmlspecialchars($peserta['nisn']); ?></td>
                                                     <td><?php echo htmlspecialchars($peserta['nama_sekolah']); ?></td>
@@ -430,6 +481,9 @@ try {
                                                             </button>
                                                         </form>
                                                         <?php endif; ?>
+                                                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#noUrutModal<?php echo $peserta['id']; ?>" title="Atur Nomor Urut">
+                                                            <i class="fas fa-sort-numeric-down"></i>
+                                                        </button>
                                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detailModal<?php echo $peserta['id']; ?>" title="Lihat Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
@@ -454,6 +508,13 @@ try {
                                                             <div class="modal-body">
                                                                 <div class="row">
                                                                     <div class="col-md-6">
+                                                                        <p><strong>Nomor Urut:</strong><br>
+                                                                            <?php if (!empty($peserta['no_urut'])): ?>
+                                                                                <span class="badge bg-primary fs-6">No. <?php echo str_pad($peserta['no_urut'], 2, '0', STR_PAD_LEFT); ?></span>
+                                                                            <?php else: ?>
+                                                                                <span class="text-muted">Belum ditentukan</span>
+                                                                            <?php endif; ?>
+                                                                        </p>
                                                                         <p><strong>Nama Lengkap:</strong><br><?php echo htmlspecialchars($peserta['nama_lengkap']); ?></p>
                                                                         <p><strong>NISN:</strong><br><?php echo htmlspecialchars($peserta['nisn']); ?></p>
                                                                         <p><strong>Sekolah:</strong><br><?php echo htmlspecialchars($peserta['nama_sekolah']); ?></p>
@@ -571,6 +632,11 @@ try {
                                                                         <input type="text" class="form-control" value="<?php echo htmlspecialchars($peserta['nama_lengkap']); ?>" readonly>
                                                                     </div>
                                                                     <div class="mb-3">
+                                                                        <label for="no_urut_status_<?php echo $peserta['id']; ?>" class="form-label">Nomor Urut</label>
+                                                                        <input type="number" class="form-control" id="no_urut_status_<?php echo $peserta['id']; ?>" name="no_urut" min="1" value="<?php echo htmlspecialchars($peserta['no_urut'] ?? ''); ?>" placeholder="Nomor urut peserta (opsional)">
+                                                                        <small class="text-muted">Untuk urutan tampil di soal musabaqoh.</small>
+                                                                    </div>
+                                                                    <div class="mb-3">
                                                                         <label for="status" class="form-label">Status</label>
                                                                         <select class="form-control" name="status" required>
                                                                             <option value="Pending" <?php echo $peserta['status'] == 'Pending' ? 'selected' : ''; ?>>Pending</option>
@@ -649,11 +715,40 @@ try {
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <!-- Modal Set No Urut -->
+                                                <div class="modal fade" id="noUrutModal<?php echo $peserta['id']; ?>" tabindex="-1">
+                                                    <div class="modal-dialog modal-sm">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title"><i class="fas fa-sort-numeric-down me-2"></i>Nomor Urut</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <form method="POST">
+                                                                <?php echo getCsrfInput(); ?>
+                                                                <input type="hidden" name="action" value="update_no_urut">
+                                                                <input type="hidden" name="peserta_id" value="<?php echo $peserta['id']; ?>">
+                                                                <div class="modal-body">
+                                                                    <p class="mb-1">Peserta:<br><strong><?php echo htmlspecialchars($peserta['nama_lengkap']); ?></strong></p>
+                                                                    <small class="text-muted d-block mb-3"><?php echo htmlspecialchars($peserta['nama_sekolah']); ?></small>
+                                                                    <div class="mb-3">
+                                                                        <label for="no_urut_input_<?php echo $peserta['id']; ?>" class="form-label fw-bold">Nomor Urut</label>
+                                                                        <input type="number" class="form-control form-control-lg text-center fw-bold" id="no_urut_input_<?php echo $peserta['id']; ?>" name="no_urut" min="1" value="<?php echo htmlspecialchars($peserta['no_urut'] ?? ''); ?>" placeholder="Contoh: 1">
+                                                                        <small class="text-muted">Untuk urutan tampil pada soal musabaqoh.</small>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Simpan</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <?php $modalsHtml .= ob_get_clean(); ?>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="12" class="text-center text-muted">Belum ada data peserta</td>
+                                                <td colspan="13" class="text-center text-muted">Belum ada data peserta</td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>
@@ -774,9 +869,13 @@ try {
                                 <label for="nisn" class="form-label">NISN <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="nisn" name="nisn" required>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="kelas" class="form-label">Kelas</label>
                                 <input type="text" class="form-control" id="kelas" name="kelas">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="no_urut" class="form-label">Nomor Urut</label>
+                                <input type="number" class="form-control" id="no_urut" name="no_urut" min="1" placeholder="Contoh: 1">
                             </div>
                         </div>
                         <div class="row">
@@ -830,7 +929,7 @@ try {
                         <div class="alert alert-info py-2 mb-3" style="font-size: 0.85rem;">
                             <i class="fas fa-info-circle me-1"></i>
                             <strong>Format kolom yang diharapkan (CSV):</strong><br>
-                            Nama Lengkap, NISN, Username Sekolah, Tempat Lahir, Tanggal Lahir (YYYY-MM-DD), Jenis Kelamin (L/P), Kelas, No HP, Alamat
+                            Nama Lengkap, NISN, Username Sekolah, Tempat Lahir, Tanggal Lahir (YYYY-MM-DD), Jenis Kelamin (L/P), Kelas, No HP, Alamat, Nomor Urut (opsional)
                         </div>
                         <div class="mb-3">
                             <label for="import_file" class="form-label fw-bold">Pilih File CSV</label>

@@ -13,7 +13,7 @@ try {
         SELECT p.*, s.nama_sekolah 
         FROM peserta p 
         JOIN sekolah s ON p.sekolah_id = s.id 
-        ORDER BY s.nama_sekolah, p.nama_lengkap
+        ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, s.nama_sekolah, p.nama_lengkap
     ");
     $peserta_list = $stmt->fetchAll();
 } catch (PDOException $e) {
@@ -28,6 +28,7 @@ header('Content-Disposition: attachment; filename="Data_Peserta_Lomba_Tahfidz_' 
 echo "<table border='1'>";
 echo "<tr>";
 echo "<th>No</th>";
+echo "<th>No Urut</th>";
 echo "<th>Nama Lengkap</th>";
 echo "<th>NISN</th>";
 echo "<th>Sekolah</th>";
@@ -46,6 +47,7 @@ $no = 1;
 foreach ($peserta_list as $peserta) {
     echo "<tr>";
     echo "<td>" . $no++ . "</td>";
+    echo "<td>" . (!empty($peserta['no_urut']) ? $peserta['no_urut'] : '-') . "</td>";
     echo "<td>" . htmlspecialchars($peserta['nama_lengkap']) . "</td>";
     echo "<td>" . htmlspecialchars($peserta['nisn']) . "</td>";
     echo "<td>" . htmlspecialchars($peserta['nama_sekolah']) . "</td>";

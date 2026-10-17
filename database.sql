@@ -27,6 +27,7 @@ CREATE TABLE peserta (
     alamat TEXT NOT NULL,
     no_hp VARCHAR(15) NOT NULL,
     kelas VARCHAR(20),
+    no_urut INT DEFAULT NULL,
     tanggal_daftar TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status ENUM('Pending', 'Diterima', 'Ditolak') DEFAULT 'Pending',
     catatan TEXT,

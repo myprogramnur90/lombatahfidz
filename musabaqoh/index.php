@@ -204,18 +204,19 @@ if ($jenis_soal === 'final') {
                                     
                                     // Hanya tampilkan peserta yang belum masuk di musabaqoh_aktif untuk sesi ini
                                     $stmtP = $pdo->prepare("
-                                        SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah
+                                        SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut
                                         FROM peserta p
                                         JOIN sekolah s ON p.sekolah_id = s.id
                                         $joinFinal
                                         WHERE p.status = 'Diterima'
                                           AND p.id NOT IN (SELECT peserta_id FROM musabaqoh_aktif WHERE jenis = ?)
-                                        ORDER BY p.nama_lengkap
+                                        ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.nama_lengkap ASC
                                     ");
                                     $stmtP->execute([$jenis_soal]);
                                     $pesertaList = $stmtP->fetchAll();
                                     foreach ($pesertaList as $ps) {
-                                        echo '<option value="' . $ps['id'] . '">' . htmlspecialchars($ps['nama_lengkap']) . ' - ' . htmlspecialchars($ps['nama_sekolah']) . '</option>';
+                                        $labelNoUrut = !empty($ps['no_urut']) ? 'No. ' . str_pad($ps['no_urut'], 2, '0', STR_PAD_LEFT) . ' - ' : '';
+                                        echo '<option value="' . $ps['id'] . '">' . htmlspecialchars($labelNoUrut . $ps['nama_lengkap'] . ' (' . $ps['nama_sekolah'] . ')') . '</option>';
                                     }
                                 } catch (PDOException $e) {}
                                 ?>
@@ -377,7 +378,8 @@ if ($jenis_soal === 'final') {
                     const box = document.getElementById('statusAktif');
                     if (data.status === 'ok' && data.data) {
                         const d = data.data;
-                        document.getElementById('aktifNama').textContent = d.nama_lengkap;
+                        const noUrutStr = d.no_urut ? '[No. ' + String(d.no_urut).padStart(2, '0') + '] ' : '';
+                        document.getElementById('aktifNama').textContent = noUrutStr + d.nama_lengkap;
                         document.getElementById('aktifSekolah').textContent = '(' + d.nama_sekolah + ')';
                         
                         const soalBadge = document.getElementById('aktifSoal');

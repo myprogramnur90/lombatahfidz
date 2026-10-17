@@ -61,6 +61,7 @@ if ($handle !== FALSE) {
         $kelas = trim($data[6] ?? '');
         $no_hp = trim($data[7] ?? '');
         $alamat = trim($data[8] ?? '');
+        $no_urut = !empty($data[9]) ? (int)trim($data[9]) : null;
         
         if (empty($nama_lengkap) || empty($nisn) || empty($username_sekolah)) {
             $errorCount++;
@@ -89,8 +90,8 @@ if ($handle !== FALSE) {
             }
             
             // Insert
-            $stmt = $pdo->prepare("INSERT INTO peserta (sekolah_id, nama_lengkap, nisn, tempat_lahir, tanggal_lahir, jenis_kelamin, kelas, no_hp, alamat, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')");
-            $stmt->execute([$sekolah_id, $nama_lengkap, $nisn, $tempat_lahir, $tanggal_lahir, $jenis_kelamin, $kelas, $no_hp, $alamat]);
+            $stmt = $pdo->prepare("INSERT INTO peserta (sekolah_id, nama_lengkap, nisn, tempat_lahir, tanggal_lahir, jenis_kelamin, kelas, no_hp, alamat, no_urut, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')");
+            $stmt->execute([$sekolah_id, $nama_lengkap, $nisn, $tempat_lahir, $tanggal_lahir, $jenis_kelamin, $kelas, $no_hp, $alamat, $no_urut]);
             
             $successCount++;
         } catch (PDOException $e) {

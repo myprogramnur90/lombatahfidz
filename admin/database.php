@@ -219,6 +219,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_db') {
         ['file' => 'update_database_penilaian.php', 'desc' => 'Update Penilaian'],
         ['file' => 'update_database_spesialisasi.php', 'desc' => 'Update Spesialisasi'],
         ['file' => 'setup_musabaqoh_aktif.php', 'desc' => 'Setup Musabaqoh Aktif'],
+        ['file' => 'update_database_no_urut.php', 'desc' => 'Update Nomor Urut Peserta'],
     ];
     
     foreach ($updateScripts as &$script) {

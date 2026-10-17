@@ -377,6 +377,7 @@ CREATE TABLE `peserta` (
   `alamat` text NOT NULL,
   `no_hp` varchar(15) NOT NULL,
   `kelas` varchar(20) DEFAULT NULL,
+  `no_urut` int(11) DEFAULT NULL,
   `tanggal_daftar` timestamp NULL DEFAULT current_timestamp(),
   `status` enum('Pending','Diterima','Ditolak') DEFAULT 'Pending',
   `catatan` text DEFAULT NULL,

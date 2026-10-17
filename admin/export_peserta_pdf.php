@@ -51,7 +51,7 @@ $query = "
         ) d2 ON d1.sekolah_id = d2.sekolah_id AND d1.created_at = d2.max_created
     ) db ON p.sekolah_id = db.sekolah_id
     $where_clause
-    ORDER BY s.nama_sekolah ASC, p.nama_lengkap ASC
+    ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, s.nama_sekolah ASC, p.nama_lengkap ASC
 ";
 
 $stmt = $pdo->prepare($query);
@@ -102,6 +102,7 @@ $namaLomba = 'Lomba Tahfidz';
             <thead>
                 <tr>
                     <th class="text-center" width="5%">No</th>
+                    <th class="text-center" width="7%">No Urut</th>
                     <th width="20%">Nama Lengkap</th>
                     <th width="10%">NISN</th>
                     <th width="20%">Sekolah</th>
@@ -117,6 +118,7 @@ $namaLomba = 'Lomba Tahfidz';
                     <?php foreach ($pesertaList as $index => $row): ?>
                         <tr>
                             <td class="text-center"><?= $index + 1 ?></td>
+                            <td class="text-center"><?= !empty($row['no_urut']) ? $row['no_urut'] : '-' ?></td>
                             <td><?= htmlspecialchars($row['nama_lengkap'] ?? '') ?></td>
                             <td><?= htmlspecialchars($row['nisn'] ?? '') ?></td>
                             <td><?= htmlspecialchars($row['nama_sekolah'] ?? '') ?></td>

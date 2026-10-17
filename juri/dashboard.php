@@ -45,13 +45,13 @@ $stats_final = $stmt_stats_final->fetch();
 
 // Ambil daftar peserta belum dinilai oleh juri ini
 $query_belum = "
-    SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah
+    SELECT p.id, p.nama_lengkap, p.nisn, s.nama_sekolah, p.no_urut
     FROM peserta p
     JOIN sekolah s ON p.sekolah_id = s.id
     WHERE p.status = 'Diterima' AND p.id NOT IN (
         SELECT peserta_id FROM penilaian WHERE juri_id = ?
     ) " . ($q !== '' ? "AND (p.nama_lengkap LIKE ? OR p.nisn LIKE ? OR s.nama_sekolah LIKE ?)" : "") . "
-    ORDER BY p.nama_lengkap
+    ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.nama_lengkap ASC
     LIMIT 10
 ";
 $stmt_belum = $pdo->prepare($query_belum);
@@ -382,6 +382,9 @@ $peserta_sudah_dinilai = $stmt_sudah->fetchAll();
                                         <?php foreach ($peserta_belum_dinilai as $peserta): ?>
                                             <tr>
                                                 <td>
+                                                    <?php if (!empty($peserta['no_urut'])): ?>
+                                                        <span class="badge bg-primary me-1">No. <?php echo str_pad($peserta['no_urut'], 2, '0', STR_PAD_LEFT); ?></span>
+                                                    <?php endif; ?>
                                                     <strong><?php echo htmlspecialchars($peserta['nama_lengkap']); ?></strong>
                                                     <br>
                                                     <small class="text-muted"><?php echo htmlspecialchars($peserta['nisn']); ?></small>
