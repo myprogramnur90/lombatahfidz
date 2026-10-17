@@ -45,9 +45,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     $no_urut = (isset($_POST['no_urut']) && trim($_POST['no_urut']) !== '') ? (int)$_POST['no_urut'] : null;
     
     try {
-        $stmt = $pdo->prepare("UPDATE peserta SET no_urut = ? WHERE id = ?");
-        $stmt->execute([$no_urut, $peserta_id]);
-        $success = 'Nomor urut peserta berhasil disimpan!';
+        if ($no_urut !== null && $no_urut > 0) {
+            // Cek apakah nomor urut sudah digunakan oleh peserta lain
+            $stmtCek = $pdo->prepare("SELECT id, nama_lengkap FROM peserta WHERE no_urut = ? AND id != ?");
+            $stmtCek->execute([$no_urut, $peserta_id]);
+            $duplikat = $stmtCek->fetch();
+            if ($duplikat) {
+                $error = "Nomor urut $no_urut sudah digunakan oleh peserta: <strong>" . htmlspecialchars($duplikat['nama_lengkap']) . "</strong>! Nomor urut tidak boleh ada yang sama.";
+            } else {
+                $stmt = $pdo->prepare("UPDATE peserta SET no_urut = ? WHERE id = ?");
+                $stmt->execute([$no_urut, $peserta_id]);
+                $success = "Nomor urut $no_urut peserta berhasil disimpan!";
+            }
+        } else {
+            $stmt = $pdo->prepare("UPDATE peserta SET no_urut = NULL WHERE id = ?");
+            $stmt->execute([$peserta_id]);
+            $success = 'Nomor urut peserta berhasil dikosongkan!';
+        }
     } catch (PDOException $e) {
         $error = 'Terjadi kesalahan dalam menyimpan nomor urut!';
     }
@@ -61,9 +75,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     $no_urut = (isset($_POST['no_urut']) && trim($_POST['no_urut']) !== '') ? (int)$_POST['no_urut'] : null;
     
     try {
-        // Update status peserta
-        $stmt = $pdo->prepare("UPDATE peserta SET status = ?, catatan = ?, no_urut = ? WHERE id = ?");
-        $stmt->execute([$status, $catatan, $no_urut, $peserta_id]);
+        if ($no_urut !== null && $no_urut > 0) {
+            // Cek apakah nomor urut sudah digunakan oleh peserta lain
+            $stmtCek = $pdo->prepare("SELECT id, nama_lengkap FROM peserta WHERE no_urut = ? AND id != ?");
+            $stmtCek->execute([$no_urut, $peserta_id]);
+            $duplikat = $stmtCek->fetch();
+            if ($duplikat) {
+                $error = "Nomor urut $no_urut sudah digunakan oleh peserta: <strong>" . htmlspecialchars($duplikat['nama_lengkap']) . "</strong>! Nomor urut tidak boleh ada yang sama.";
+            }
+        } else {
+            $no_urut = null;
+        }
+
+        if (empty($error)) {
+            // Update status peserta
+            $stmt = $pdo->prepare("UPDATE peserta SET status = ?, catatan = ?, no_urut = ? WHERE id = ?");
+            $stmt->execute([$status, $catatan, $no_urut, $peserta_id]);
         
         // Ambil sekolah_id dari peserta
         $stmt = $pdo->prepare("SELECT sekolah_id FROM peserta WHERE id = ?");
@@ -92,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             $success = 'Status peserta berhasil diupdate! Semua pembayaran dan dokumen sekolah otomatis ditolak.';
         } else {
             $success = 'Status peserta berhasil diupdate!';
+        }
         }
     } catch (PDOException $e) {
         $error = 'Terjadi kesalahan dalam mengupdate data!';
@@ -166,7 +194,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             $stmt->execute([$nisn]);
             if ($stmt->fetch()) {
                 $error = 'NISN sudah terdaftar!';
-            } else {
+            } elseif ($no_urut !== null && $no_urut > 0) {
+                // Cek apakah nomor urut sudah digunakan oleh peserta lain
+                $stmtCek = $pdo->prepare("SELECT id, nama_lengkap FROM peserta WHERE no_urut = ?");
+                $stmtCek->execute([$no_urut]);
+                $duplikat = $stmtCek->fetch();
+                if ($duplikat) {
+                    $error = "Nomor urut $no_urut sudah digunakan oleh peserta: <strong>" . htmlspecialchars($duplikat['nama_lengkap']) . "</strong>! Nomor urut tidak boleh ada yang sama.";
+                }
+            }
+            
+            if (empty($error)) {
                 $stmt = $pdo->prepare("INSERT INTO peserta (sekolah_id, nama_lengkap, nisn, tempat_lahir, tanggal_lahir, jenis_kelamin, kelas, no_hp, alamat, no_urut, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Diterima')");
                 $stmt->execute([$sekolah_id, $nama_lengkap, $nisn, $tempat_lahir, $tanggal_lahir, $jenis_kelamin, $kelas, $no_hp, $alamat, $no_urut]);
                 $success = 'Peserta berhasil ditambahkan!';
@@ -664,7 +702,7 @@ try {
                                                                     </div>
                                                                     <div class="mb-3">
                                                                         <label for="no_urut_status_<?php echo $peserta['id']; ?>" class="form-label">Nomor Urut</label>
-                                                                        <input type="number" class="form-control" id="no_urut_status_<?php echo $peserta['id']; ?>" name="no_urut" min="1" value="<?php echo htmlspecialchars($peserta['no_urut'] ?? ''); ?>" placeholder="Nomor urut peserta (opsional)">
+                                                                        <input type="number" class="form-control" id="no_urut_status_<?php echo $peserta['id']; ?>" name="no_urut" min="1" value="<?php echo htmlspecialchars($peserta['no_urut'] ?? ''); ?>" placeholder="Nomor urut peserta (opsional)" oninput="checkNoUrutInput(this, <?php echo $peserta['id']; ?>)">
                                                                         <small class="text-muted">Untuk urutan tampil di soal musabaqoh.</small>
                                                                     </div>
                                                                     <div class="mb-3">
@@ -763,7 +801,7 @@ try {
                                                                     <small class="text-muted d-block mb-3"><?php echo htmlspecialchars($peserta['nama_sekolah']); ?></small>
                                                                     <div class="mb-3">
                                                                         <label for="no_urut_input_<?php echo $peserta['id']; ?>" class="form-label fw-bold">Nomor Urut</label>
-                                                                        <input type="number" class="form-control form-control-lg text-center fw-bold" id="no_urut_input_<?php echo $peserta['id']; ?>" name="no_urut" min="1" value="<?php echo htmlspecialchars($peserta['no_urut'] ?? ''); ?>" placeholder="Contoh: 1">
+                                                                        <input type="number" class="form-control form-control-lg text-center fw-bold" id="no_urut_input_<?php echo $peserta['id']; ?>" name="no_urut" min="1" value="<?php echo htmlspecialchars($peserta['no_urut'] ?? ''); ?>" placeholder="Contoh: 1" oninput="checkNoUrutInput(this, <?php echo $peserta['id']; ?>)">
                                                                         <small class="text-muted">Untuk urutan tampil pada soal musabaqoh.</small>
                                                                     </div>
                                                                 </div>
@@ -906,7 +944,7 @@ try {
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label for="no_urut" class="form-label">Nomor Urut</label>
-                                <input type="number" class="form-control" id="no_urut" name="no_urut" min="1" placeholder="Contoh: 1">
+                                <input type="number" class="form-control" id="no_urut" name="no_urut" min="1" placeholder="Contoh: 1" oninput="checkNoUrutInput(this, null)">
                             </div>
                         </div>
                         <div class="row">
@@ -989,6 +1027,73 @@ try {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Data nomor urut yang sudah terpakai
+    const usedNoUrutMap = <?php
+        try {
+            $stmtAllNo = $pdo->query("SELECT id, no_urut, nama_lengkap FROM peserta WHERE no_urut IS NOT NULL AND no_urut > 0");
+            $noMap = [];
+            while ($r = $stmtAllNo->fetch()) {
+                $noMap[(int)$r['no_urut']] = [
+                    'id' => (int)$r['id'],
+                    'nama' => $r['nama_lengkap']
+                ];
+            }
+            echo json_encode($noMap);
+        } catch (Exception $e) {
+            echo '{}';
+        }
+    ?>;
+
+    function checkNoUrutInput(inputEl, currentPesertaId = null) {
+        const val = parseInt(inputEl.value);
+        let feedbackEl = inputEl.parentNode.querySelector('.no-urut-feedback');
+        if (!feedbackEl) {
+            feedbackEl = document.createElement('div');
+            feedbackEl.className = 'no-urut-feedback small mt-1';
+            inputEl.parentNode.appendChild(feedbackEl);
+        }
+
+        if (!val || val <= 0 || isNaN(val)) {
+            inputEl.classList.remove('is-invalid', 'is-valid');
+            feedbackEl.innerHTML = '';
+            return true;
+        }
+
+        const existing = usedNoUrutMap[val];
+        if (existing && (!currentPesertaId || existing.id !== parseInt(currentPesertaId))) {
+            inputEl.classList.add('is-invalid');
+            inputEl.classList.remove('is-valid');
+            feedbackEl.className = 'no-urut-feedback text-danger small mt-1 fw-bold';
+            feedbackEl.innerHTML = `<i class="fas fa-times-circle me-1"></i> Nomor urut <strong>${val}</strong> sudah digunakan oleh peserta: <u>${existing.nama}</u>! Tidak boleh sama.`;
+            return false;
+        } else {
+            inputEl.classList.remove('is-invalid');
+            inputEl.classList.add('is-valid');
+            feedbackEl.className = 'no-urut-feedback text-success small mt-1';
+            feedbackEl.innerHTML = `<i class="fas fa-check-circle me-1"></i> Nomor urut ${val} tersedia.`;
+            return true;
+        }
+    }
+
+    // Cegah submit form jika nomor urut duplikat
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const noInput = form.querySelector('input[name="no_urut"]');
+                if (noInput && noInput.value.trim() !== '') {
+                    const pIdInput = form.querySelector('input[name="peserta_id"]');
+                    const pId = pIdInput ? pIdInput.value : null;
+                    if (!checkNoUrutInput(noInput, pId)) {
+                        e.preventDefault();
+                        alert(`Nomor urut ${noInput.value} sudah digunakan oleh peserta lain! Silakan gunakan nomor urut yang berbeda.`);
+                        noInput.focus();
+                    }
+                }
+            });
+        });
+    });
+    </script>
     <script>
         // Enable/disable delete button based on checkbox
         document.addEventListener('DOMContentLoaded', function() {

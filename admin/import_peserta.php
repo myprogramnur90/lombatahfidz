@@ -89,6 +89,15 @@ if ($handle !== FALSE) {
                 continue;
             }
             
+            // Check if no_urut already exists to prevent duplicate
+            if ($no_urut !== null && $no_urut > 0) {
+                $stmtCekNo = $pdo->prepare("SELECT id FROM peserta WHERE no_urut = ?");
+                $stmtCekNo->execute([$no_urut]);
+                if ($stmtCekNo->fetch()) {
+                    $no_urut = null; // Kosongkan agar tidak duplikat
+                }
+            }
+
             // Insert
             $stmt = $pdo->prepare("INSERT INTO peserta (sekolah_id, nama_lengkap, nisn, tempat_lahir, tanggal_lahir, jenis_kelamin, kelas, no_hp, alamat, no_urut, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Diterima')");
             $stmt->execute([$sekolah_id, $nama_lengkap, $nisn, $tempat_lahir, $tanggal_lahir, $jenis_kelamin, $kelas, $no_hp, $alamat, $no_urut]);
