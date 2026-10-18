@@ -268,6 +268,8 @@ $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_c
 $peserta_list = [];
 $total_records = 0;
 $total_pages = 1;
+$sekolah_list = [];
+$pendingCount = 0;
 
 // Ambil data peserta dengan filter dan pagination
 try {
@@ -320,6 +322,10 @@ try {
     // Ambil data sekolah untuk filter
     $stmt = $pdo->query("SELECT id, nama_sekolah FROM sekolah ORDER BY nama_sekolah");
     $sekolah_list = $stmt->fetchAll();
+    
+    // Hitung jumlah peserta yang berstatus Pending untuk tombol Setujui Semua
+    $stmtPending = $pdo->query("SELECT COUNT(*) FROM peserta WHERE status = 'Pending'");
+    $pendingCount = (int)$stmtPending->fetchColumn();
     
 } catch (PDOException $e) {
     $error = "Terjadi kesalahan dalam mengambil data!";
