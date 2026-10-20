@@ -330,6 +330,12 @@ $juri_stats = $pdo->query($query_juri_stats)->fetchAll();
                                                         <a href="detail_penilaian.php?id=<?php echo $laporan['id']; ?>" class="btn btn-sm btn-outline-primary">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
+                                        <a href="edit_penilaian.php?id=<?php echo $laporan['id']; ?>" class="btn btn-sm btn-outline-warning ms-1">
+                                                        <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="delete_penilaian.php?id=<?php echo $laporan['id']; ?>" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Yakin hapus semua penilaian peserta ini?');">
+                                                        <i class="fas fa-trash"></i>
+                                        </a>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
