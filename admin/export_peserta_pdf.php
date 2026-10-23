@@ -1,8 +1,9 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
 require_once '../config/database.php';
 
-if (!isset($_SESSION['admin_id'])) {
+if (!isset($_SESSION['admin_id']) && (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'admin')) {
     header('Location: ../auth/login_admin.php');
     exit();
 }
@@ -10,6 +11,7 @@ if (!isset($_SESSION['admin_id'])) {
 // Get filter if any
 $filter_sekolah = isset($_GET['sekolah']) ? $_GET['sekolah'] : '';
 $filter_status = isset($_GET['status']) ? $_GET['status'] : '';
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 $where_conditions = [];
 $params = [];
@@ -21,6 +23,12 @@ if (!empty($filter_sekolah)) {
 if (!empty($filter_status)) {
     $where_conditions[] = "p.status = ?";
     $params[] = $filter_status;
+}
+if (!empty($search)) {
+    $where_conditions[] = "(p.nama_lengkap LIKE ? OR p.nisn LIKE ? OR s.nama_sekolah LIKE ?)";
+    $params[] = "%$search%";
+    $params[] = "%$search%";
+    $params[] = "%$search%";
 }
 
 $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";

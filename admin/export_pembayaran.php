@@ -1,9 +1,10 @@
 <?php
-session_start();
+require_once '../config/security.php';
+initSecureSession();
 require_once '../config/database.php';
 
-if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] != 'admin') {
-    header('Location: ../index.php');
+if (!isset($_SESSION['admin_id']) && (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'admin')) {
+    header('Location: ../auth/login_admin.php');
     exit();
 }
 
@@ -21,9 +22,10 @@ try {
 }
 
 // Set header untuk download Excel
-header('Content-Type: application/vnd.ms-excel');
+header('Content-Type: application/vnd.ms-excel; charset=utf-8');
 header('Content-Disposition: attachment; filename="Data_Pembayaran_' . date('Y-m-d_H-i-s') . '.xls"');
 header('Cache-Control: max-age=0');
+header('Pragma: public');
 
 // Mulai output Excel
 echo '<table border="1">';

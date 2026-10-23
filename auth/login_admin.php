@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['admin_username'] = $admin['username'];
             $_SESSION['admin_nama'] = $admin['nama_lengkap'];
             $_SESSION['admin_logged_in'] = true;
+            $_SESSION['user_type'] = 'admin';
             
             header('Location: ../admin/dashboard.php');
             exit();

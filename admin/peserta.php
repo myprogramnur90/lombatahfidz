@@ -229,6 +229,8 @@ if (isset($_SESSION['import_error'])) {
 $filter_sekolah = isset($_GET['sekolah']) ? $_GET['sekolah'] : '';
 $filter_status = isset($_GET['status']) ? $_GET['status'] : '';
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$export_params = array_filter(['sekolah' => $filter_sekolah, 'status' => $filter_status, 'search' => $search]);
+$export_qs = !empty($export_params) ? '?' . http_build_query($export_params) : '';
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'no_urut';
 $order_by = "ORDER BY CASE WHEN p.no_urut IS NULL OR p.no_urut = 0 THEN 1 ELSE 0 END, p.no_urut ASC, p.created_at DESC";
 if ($sort === 'terbaru') {
@@ -358,10 +360,10 @@ try {
                     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h2><i class="fas fa-users me-2"></i>Data Peserta</h2>
                         <div class="d-flex gap-2 flex-wrap">
-                            <a href="export_peserta.php" class="btn btn-success btn-action" title="Export Excel">
+                            <a href="export_peserta.php<?= !empty($export_qs) ? $export_qs : "" ?>" class="btn btn-success btn-action" title="Export Excel">
                                 <i class="fas fa-file-excel me-2"></i>Export Excel
                             </a>
-                            <a href="export_peserta_pdf.php" target="_blank" class="btn btn-danger btn-action" title="Export PDF">
+                            <a href="export_peserta_pdf.php<?= !empty($export_qs) ? $export_qs : "" ?>" target="_blank" class="btn btn-danger btn-action" title="Export PDF">
                                 <i class="fas fa-file-pdf me-2"></i>Export PDF
                             </a>
                             <button class="btn btn-info text-white btn-action" data-bs-toggle="modal" data-bs-target="#importPesertaModal">
