@@ -94,14 +94,7 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
             max-width: 1600px;
         }
         
-        @media (min-width: 992px) {
-            .sticky-bel {
-                position: -webkit-sticky;
-                position: sticky;
-                top: 20px;
-                z-index: 10;
-            }
-        }
+        /* Sticky Bel Diganti Floating Dock */
         
         .header {
             text-align: center;
@@ -205,32 +198,68 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
         .hidden-soft.reveal { display: block; opacity: 1; transform: translateY(0); transition: opacity .35s ease, transform .35s ease; }
         .soal-item:hover { box-shadow: 0 8px 18px rgba(0,0,0,0.08); transform: translateY(-2px); }
 
-        /* Panel Bel Styling */
-        .bel-panel-card {
-            border-radius: 18px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        /* Panel Bel Melayang (Floating Dock) Styling */
+        .soal-main-layout {
+            position: relative;
+            width: 100%;
+        }
+
+        .floating-bel-container {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
             border: 2px solid #5a78d1;
             overflow: hidden;
-            background: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .floating-bel-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            user-select: none;
         }
         
         .btn-bel {
             border: none;
-            border-radius: 14px;
+            border-radius: 10px;
             color: white;
-            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
         }
         .btn-bel:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
             color: white;
         }
         .btn-bel:active, .btn-bel.ringing {
-            transform: scale(0.96);
-            box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.7);
+            transform: scale(0.95);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Tombol Bel Ukuran Lebih Kecil (Compact) */
+        .btn-bel-sm {
+            padding: 7px 6px;
+            font-size: 0.84rem;
+            line-height: 1.2;
+        }
+
+        .bel-key-badge {
+            background: rgba(255, 255, 255, 0.92);
+            color: #212529;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
+        .bel-subtext {
+            font-size: 0.69rem;
+            color: rgba(255, 255, 255, 0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .btn-bel-start {
@@ -244,6 +273,63 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
         }
         .btn-bel-finish {
             background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+        }
+
+        @media (min-width: 992px) {
+            .header {
+                padding-right: 285px;
+                transition: padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .header.panel-collapsed {
+                padding-right: 65px;
+            }
+            .peserta-aktif-box {
+                margin-right: 285px;
+                transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .peserta-aktif-box.panel-collapsed {
+                margin-right: 65px;
+            }
+            .soal-content-area {
+                padding-right: 285px;
+                transition: padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .soal-content-area.panel-collapsed {
+                padding-right: 65px;
+            }
+            .floating-bel-container {
+                position: fixed;
+                right: max(20px, calc((100vw - 1600px) / 2 + 20px));
+                top: 85px;
+                width: 265px;
+                max-height: calc(100vh - 105px);
+                overflow-y: auto;
+                z-index: 1040;
+            }
+            .floating-bel-container.collapsed {
+                width: 52px;
+                overflow: visible;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .soal-content-area {
+                padding-right: 0;
+                padding-bottom: 220px;
+            }
+            .floating-bel-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-height: 55vh;
+                overflow-y: auto;
+                z-index: 1040;
+                border-radius: 20px 20px 0 0;
+                border-bottom: none;
+                box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.18);
+            }
         }
         
         .ring-indicator {
@@ -293,7 +379,7 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
 
             <!-- Informasi Peserta Aktif (Jika Ada) -->
             <?php if ($pesertaAktif): ?>
-            <div class="alert alert-light border shadow-sm d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4" style="border-radius: 14px; border-left: 6px solid #667eea !important;">
+            <div class="alert alert-light border shadow-sm d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 peserta-aktif-box" style="border-radius: 14px; border-left: 6px solid #667eea !important;">
                 <div class="d-flex align-items-center">
                     <div class="rounded-circle bg-primary text-white p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
                         <i class="fas fa-user-graduate fa-lg"></i>
@@ -315,10 +401,10 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
             </div>
             <?php endif; ?>
 
-            <!-- Row Pembagian Layar: Soal di Kiri, Bel di Kanan -->
-            <div class="row g-4 align-items-start">
-                <!-- Kolom Kiri: Tampilan Soal -->
-                <div class="col-lg-7 col-xl-8">
+            <!-- Layout Soal & Panel Melayang -->
+            <div class="soal-main-layout">
+                <!-- Area Tampilan Soal (Lebar Penuh) -->
+                <div class="soal-content-area">
                     <!-- =============================================================== -->
             <!-- TAMPILAN SOAL JUZ 30 -->
             <!-- =============================================================== -->
@@ -439,155 +525,189 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
                 <?php endif; ?>
             </div>
                     
+                    <!-- Notifikasi Selesai di Bawah Soal -->
+                    <div id="finishNoticeBoxMain" class="alert alert-success mt-4 mb-4 text-center py-3 shadow-sm" style="display: none; border-radius: 14px;">
+                        <h4 class="mb-1 fw-bold text-success"><i class="fas fa-check-circle me-2"></i>Alhamdulillah, Seluruh Soal Telah Selesai Dibacakan!</h4>
+                        <p class="mb-2 text-muted">Peserta menghentikan jawaban terakhir. Silakan kembali untuk memilih nomor soal berikutnya.</p>
+                        <a href="#" onclick="kembaliDanClear(); return false;" class="btn btn-success fw-bold px-4 py-2 mt-1">
+                            <i class="fas fa-arrow-left me-2"></i>Kembali ke Pilih Soal
+                        </a>
+                    </div>
+                    
                     <div class="controls text-start mb-4">
-                    <a href="#" onclick="kembaliDanClear(); return false;" class="btn btn-custom ms-0">
-                        <i class="fas fa-arrow-left me-2"></i>Kembali ke Pilih Soal
-                    </a>
-                </div>
+                        <a href="#" onclick="kembaliDanClear(); return false;" class="btn btn-custom ms-0">
+                            <i class="fas fa-arrow-left me-2"></i>Kembali ke Pilih Soal
+                        </a>
+                    </div>
                 </div>
 
-                <!-- Kolom Kanan: Kontrol Bel Musabaqoh -->
-                <div class="col-lg-5 col-xl-4">
-                    <div class="sticky-bel">
-                        <!-- =============================================================== -->
-            <!-- PANEL KONTROL BEL MUSABAQOH (PROTOKOL RESMI MHQ) -->
-            <!-- =============================================================== -->
-            <div class="card bel-panel-card mb-4">
-                <div class="card-header py-3 text-white d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-bell fa-lg me-2 text-warning"></i>
-                        <h5 class="mb-0 fw-bold">Kontrol Bel Musabaqoh</h5>
+                <!-- =============================================================== -->
+                <!-- PANEL KONTROL BEL MUSABAQOH MELAYANG (FLOATING DOCK KANAN)     -->
+                <!-- =============================================================== -->
+                <div class="floating-bel-container" id="floatingBelPanel">
+                    <!-- Header Panel Melayang -->
+                    <div class="floating-bel-header text-white d-flex justify-content-between align-items-center py-2 px-3">
+                        <div class="d-flex align-items-center" id="floatingBelTitle">
+                            <i class="fas fa-bell text-warning me-2"></i>
+                            <span class="fw-bold" style="font-size: 0.88rem;">Kontrol Bel</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 ms-auto">
+                            <button type="button" class="btn btn-sm btn-outline-light py-0 px-2" id="btnTesSuaraHeader" style="font-size: 0.72rem; border-radius: 6px;" onclick="testSound()" title="Uji Suara Bel">
+                                <i class="fas fa-volume-up me-1"></i>Tes
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-light py-0 px-2" id="btnToggleCollapse" style="font-size: 0.72rem; border-radius: 6px;" onclick="toggleBelCollapse()" title="Sembunyikan / Tampilkan Panel">
+                                <i class="fas fa-chevron-right" id="iconToggleCollapse"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light text-dark d-none d-md-inline-block">
-                            <i class="fas fa-keyboard me-1 text-primary"></i>Shortcut: [1] [2] [3] [4] [Spasi]
-                        </span>
-                        <button type="button" class="btn btn-sm btn-outline-light" onclick="testSound()" title="Uji Suara Bel">
-                            <i class="fas fa-volume-up me-1"></i>Uji Suara
+
+                    <!-- Mini Strip (Aktif Saat Mode Collapsed) -->
+                    <div id="floatingBelMini" class="p-2 d-none flex-column align-items-center gap-2">
+                        <button type="button" class="btn btn-bel btn-bel-start p-0 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: 10px;" onclick="triggerBel2()" title="Bel 2x - Mulai (Tekan 2)">
+                            <span class="fw-bold" style="font-size: 0.85rem;">2x</span>
+                        </button>
+                        <button type="button" class="btn btn-bel btn-bel-warning p-0 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: 10px;" onclick="triggerBel1()" title="Bel 1x - Teguran (Tekan 1)">
+                            <span class="fw-bold" style="font-size: 0.85rem;">1x</span>
+                        </button>
+                        <button type="button" class="btn btn-bel btn-bel-next p-0 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: 10px;" onclick="triggerBel3()" title="Bel 3x - Pindah (Tekan 3)">
+                            <span class="fw-bold" style="font-size: 0.85rem;">3x</span>
+                        </button>
+                        <button type="button" class="btn btn-bel btn-bel-finish p-0 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: 10px;" onclick="triggerBel4()" title="Bel 4x - Selesai (Tekan 4)">
+                            <span class="fw-bold" style="font-size: 0.85rem;">4x</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary p-0 d-flex align-items-center justify-content-center mt-1" style="width: 32px; height: 32px; border-radius: 8px;" onclick="toggleBelCollapse()" title="Buka Panel Lengkap">
+                            <i class="fas fa-chevron-left" style="font-size: 0.75rem;"></i>
                         </button>
                     </div>
-                </div>
-                <div class="card-body p-3 p-md-4">
-                    <!-- Status Bar & Pengaturan Jeda -->
-                    <div class="row align-items-center mb-3 pb-3 border-bottom g-2">
-                        <div class="col-12 col-md-6">
-                            <div class="d-flex align-items-center">
-                                <span class="ring-indicator me-2" id="ringIndicator"></span>
-                                <div>
-                                    <span class="text-muted small">Status Bel / Alur:</span>
-                                    <div id="belStatusText" class="fw-bold fs-6 text-primary">Menunggu lomba dimulai... (Tekan Bel 2x)</div>
-                                </div>
+
+                    <!-- Body Panel Melayang -->
+                    <div class="floating-bel-body p-2 p-md-3" id="floatingBelBody">
+                        <!-- Status Ring & Active Soal -->
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center text-truncate me-1" style="min-width: 0;">
+                                <span class="ring-indicator me-2 flex-shrink-0" id="ringIndicator"></span>
+                                <span id="belStatusText" class="fw-bold small text-primary text-truncate" style="font-size: 0.78rem;">Menunggu lomba...</span>
                             </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <div class="d-flex justify-content-md-end align-items-center gap-3 flex-wrap">
-                                <div class="d-flex align-items-center">
-                                    <label for="selectBunyi" class="text-muted small me-2 text-nowrap"><i class="fas fa-music me-1 text-info"></i>Bunyi Bel:</label>
-                                    <select id="selectBunyi" class="form-select form-select-sm w-auto">
-                                        <option value="kuningan" <?php echo $belBunyiSetting === 'kuningan' ? 'selected' : ''; ?>>Lonceng Kuningan</option>
-                                        <option value="digital" <?php echo $belBunyiSetting === 'digital' ? 'selected' : ''; ?>>Bel Digital</option>
-                                        <option value="gong" <?php echo $belBunyiSetting === 'gong' ? 'selected' : ''; ?>>Gong</option>
-                                        <option value="tabung" <?php echo $belBunyiSetting === 'tabung' ? 'selected' : ''; ?>>Lonceng Tabung</option>
-                                    </select>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <label for="selectJeda" class="text-muted small me-2 text-nowrap"><i class="fas fa-stopwatch me-1 text-warning"></i>Jeda Teguran:</label>
-                                    <select id="selectJeda" class="form-select form-select-sm w-auto">
-                                        <?php
-                                        $optionsJeda = [5, 8, 10, 15];
-                                        if (!in_array($belJedaSetting, $optionsJeda)) {
-                                            $optionsJeda[] = $belJedaSetting;
-                                            sort($optionsJeda);
-                                        }
-                                        foreach ($optionsJeda as $detik) {
-                                            $sel = ($detik == $belJedaSetting) ? 'selected' : '';
-                                            echo "<option value=\"$detik\" $sel>{$detik} Detik</option>";
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
-                                <div>
-                                    <span id="activeSoalBadge" class="badge bg-secondary py-2 px-3">Belum Mulai</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4 Tombol Protokol Bel -->
-                    <div class="row g-2 text-center">
-                        <!-- 1. Bel 2x: Mulai Lomba -->
-                        <div class="col-6">
-                            <button type="button" class="btn btn-bel btn-bel-start w-100 p-3 h-100" id="btnBel2" onclick="triggerBel2()">
-                                <div class="mb-1"><i class="fas fa-play-circle fa-2x"></i></div>
-                                <div class="fw-bold fs-5">Bel 2x</div>
-                                <div class="small text-white-50">Lomba Dimulai</div>
-                                <div class="badge bg-white text-dark mt-2 shadow-sm">Tombol [2]</div>
-                            </button>
+                            <span id="activeSoalBadge" class="badge bg-secondary py-1 px-2 flex-shrink-0" style="font-size: 0.72rem;">Belum Mulai</span>
                         </div>
 
-                        <!-- 2. Bel 1x: Teguran Kesalahan -->
-                        <div class="col-6">
-                            <button type="button" class="btn btn-bel btn-bel-warning w-100 p-3 h-100" id="btnBel1" onclick="triggerBel1()">
-                                <div class="mb-1"><i class="fas fa-exclamation-triangle fa-2x"></i></div>
-                                <div class="fw-bold fs-5">Bel 1x</div>
-                                <div class="small text-white-50">Tegur Kesalahan (+ Jeda)</div>
-                                <div class="badge bg-white text-dark mt-2 shadow-sm">Tombol [1]</div>
-                            </button>
-                        </div>
-
-                        <!-- 3. Bel 3x: Pindah Soal -->
-                        <div class="col-6">
-                            <button type="button" class="btn btn-bel btn-bel-next w-100 p-3 h-100" id="btnBel3" onclick="triggerBel3()">
-                                <div class="mb-1"><i class="fas fa-step-forward fa-2x"></i></div>
-                                <div class="fw-bold fs-5">Bel 3x</div>
-                                <div class="small text-white-50">Perpindahan Soal</div>
-                                <div class="badge bg-white text-dark mt-2 shadow-sm">Tombol [3]</div>
-                            </button>
-                        </div>
-
-                        <!-- 4. Bel 4x: Lomba Berakhir -->
-                        <div class="col-6">
-                            <button type="button" class="btn btn-bel btn-bel-finish w-100 p-3 h-100" id="btnBel4" onclick="triggerBel4()">
-                                <div class="mb-1"><i class="fas fa-flag-checkered fa-2x"></i></div>
-                                <div class="fw-bold fs-5">Bel 4x</div>
-                                <div class="small text-white-50">Lomba Berakhir</div>
-                                <div class="badge bg-white text-dark mt-2 shadow-sm">Tombol [4]</div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Kotak Animasi Countdown Jeda Waktu Kesalahan (Aktif saat Bel 1x) -->
-                    <div id="jedaCountdownBox" class="mt-3 p-3 rounded-3 shadow-sm" style="display: none; background: #fff8e1; border: 2px solid #ffc107;">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <div class="d-flex align-items-center">
-                                <div class="spinner-grow text-warning me-3" role="status" style="width: 2.2rem; height: 2.2rem;"></div>
-                                <div>
-                                    <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-stopwatch me-1 text-danger"></i> Jeda Waktu Kesempatan Memperbaiki Hafalan (Tawaqquf)</h6>
-                                    <small class="text-muted">Jika waktu habis, sistem otomatis membunyikan Bel 3x & lanjut ke soal berikutnya.</small>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="fs-2 fw-bold text-danger font-monospace px-2" id="countdownTimer">08s</div>
-                                <button type="button" class="btn btn-success fw-bold px-3 py-2" onclick="pesertaMelanjutkan()">
-                                    <i class="fas fa-check me-1"></i> Peserta Lanjut <span class="badge bg-light text-dark ms-1">[Spasi]</span>
+                        <!-- 4 Tombol Protokol Bel (Dibuat Lebih Kecil & Kompak) -->
+                        <div class="row g-1 text-center">
+                            <!-- 1. Bel 2x: Mulai Lomba -->
+                            <div class="col-6">
+                                <button type="button" class="btn btn-bel btn-bel-start btn-bel-sm w-100" id="btnBel2" onclick="triggerBel2()" title="Bel 2x - Mulai Lomba (Shortcut: 2)">
+                                    <div class="d-flex align-items-center justify-content-center gap-1 mb-1">
+                                        <i class="fas fa-play-circle fa-sm"></i>
+                                        <span class="fw-bold">Bel 2x</span>
+                                        <span class="bel-key-badge">[2]</span>
+                                    </div>
+                                    <div class="bel-subtext">Mulai Lomba</div>
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cancelCountdown()">
+                            </div>
+
+                            <!-- 2. Bel 1x: Teguran Kesalahan -->
+                            <div class="col-6">
+                                <button type="button" class="btn btn-bel btn-bel-warning btn-bel-sm w-100" id="btnBel1" onclick="triggerBel1()" title="Bel 1x - Teguran Kesalahan (Shortcut: 1)">
+                                    <div class="d-flex align-items-center justify-content-center gap-1 mb-1">
+                                        <i class="fas fa-exclamation-triangle fa-sm"></i>
+                                        <span class="fw-bold">Bel 1x</span>
+                                        <span class="bel-key-badge">[1]</span>
+                                    </div>
+                                    <div class="bel-subtext">Tegur (+Jeda)</div>
+                                </button>
+                            </div>
+
+                            <!-- 3. Bel 3x: Pindah Soal -->
+                            <div class="col-6">
+                                <button type="button" class="btn btn-bel btn-bel-next btn-bel-sm w-100" id="btnBel3" onclick="triggerBel3()" title="Bel 3x - Pindah Soal (Shortcut: 3)">
+                                    <div class="d-flex align-items-center justify-content-center gap-1 mb-1">
+                                        <i class="fas fa-step-forward fa-sm"></i>
+                                        <span class="fw-bold">Bel 3x</span>
+                                        <span class="bel-key-badge">[3]</span>
+                                    </div>
+                                    <div class="bel-subtext">Pindah Soal</div>
+                                </button>
+                            </div>
+
+                            <!-- 4. Bel 4x: Lomba Berakhir -->
+                            <div class="col-6">
+                                <button type="button" class="btn btn-bel btn-bel-finish btn-bel-sm w-100" id="btnBel4" onclick="triggerBel4()" title="Bel 4x - Lomba Berakhir (Shortcut: 4)">
+                                    <div class="d-flex align-items-center justify-content-center gap-1 mb-1">
+                                        <i class="fas fa-flag-checkered fa-sm"></i>
+                                        <span class="fw-bold">Bel 4x</span>
+                                        <span class="bel-key-badge">[4]</span>
+                                    </div>
+                                    <div class="bel-subtext">Selesai</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Kotak Animasi Countdown Jeda Waktu Kesalahan (Aktif saat Bel 1x) -->
+                        <div id="jedaCountdownBox" class="mt-2 p-2 rounded-3 shadow-sm" style="display: none; background: #fff8e1; border: 2px solid #ffc107;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="d-flex align-items-center">
+                                    <div class="spinner-grow spinner-grow-sm text-warning me-1" role="status" style="width: 1rem; height: 1rem;"></div>
+                                    <span class="fw-bold text-dark" style="font-size: 0.75rem;">Jeda Tawaqquf</span>
+                                </div>
+                                <div class="fs-5 fw-bold text-danger font-monospace" id="countdownTimer">08s</div>
+                            </div>
+                            <div class="progress mb-2" style="height: 5px;">
+                                <div id="countdownProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" style="width: 100%;"></div>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn btn-success btn-sm fw-bold flex-grow-1 py-1" style="font-size: 0.75rem;" onclick="pesertaMelanjutkan()">
+                                    <i class="fas fa-check me-1"></i>Lanjut [Spasi]
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm py-1 px-2" style="font-size: 0.75rem;" onclick="cancelCountdown()">
                                     Batal
                                 </button>
                             </div>
                         </div>
-                        <div class="progress mt-2" style="height: 10px;">
-                            <div id="countdownProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" style="width: 100%;"></div>
-                        </div>
-                    </div>
 
-                    <!-- Notifikasi Selesai -->
-                    <div id="finishNoticeBox" class="alert alert-success mt-3 mb-0 text-center py-3" style="display: none; border-radius: 12px;">
-                        <h5 class="mb-1 fw-bold"><i class="fas fa-check-circle me-2 text-success"></i>Alhamdulillah, Seluruh Soal Telah Selesai Dibacakan!</h5>
-                        <p class="mb-0 text-muted">Peserta menghentikan jawaban terakhir. Silakan kembali untuk memilih nomor soal berikutnya.</p>
-                    </div>
-                </div>
-            </div>
+                        <!-- Pengaturan Bunyi & Jeda (Dropdown Ringkas) -->
+                        <div class="mt-2 pt-2 border-top">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <a class="text-muted small text-decoration-none" data-bs-toggle="collapse" href="#belSettingsCollapse" role="button" aria-expanded="false" style="font-size: 0.72rem;">
+                                    <i class="fas fa-cog me-1"></i>Pengaturan <i class="fas fa-caret-down ms-1"></i>
+                                </a>
+                                <span class="text-muted" style="font-size: 0.68rem;"><i class="fas fa-keyboard me-1"></i>1 2 3 4 Spasi</span>
+                            </div>
+                            <div class="collapse" id="belSettingsCollapse">
+                                <div class="row g-1 pt-1" style="font-size: 0.75rem;">
+                                    <div class="col-6">
+                                        <label for="selectBunyi" class="text-muted small mb-0 d-block" style="font-size: 0.7rem;"><i class="fas fa-music me-1 text-info"></i>Bunyi:</label>
+                                        <select id="selectBunyi" class="form-select form-select-sm py-0 px-1" style="font-size: 0.72rem; height: 26px;">
+                                            <option value="kuningan" <?php echo $belBunyiSetting === 'kuningan' ? 'selected' : ''; ?>>Kuningan</option>
+                                            <option value="digital" <?php echo $belBunyiSetting === 'digital' ? 'selected' : ''; ?>>Digital</option>
+                                            <option value="gong" <?php echo $belBunyiSetting === 'gong' ? 'selected' : ''; ?>>Gong</option>
+                                            <option value="tabung" <?php echo $belBunyiSetting === 'tabung' ? 'selected' : ''; ?>>Tabung</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="selectJeda" class="text-muted small mb-0 d-block" style="font-size: 0.7rem;"><i class="fas fa-stopwatch me-1 text-warning"></i>Jeda:</label>
+                                        <select id="selectJeda" class="form-select form-select-sm py-0 px-1" style="font-size: 0.72rem; height: 26px;">
+                                            <?php
+                                            $optionsJeda = [5, 8, 10, 15];
+                                            if (!in_array($belJedaSetting, $optionsJeda)) {
+                                                $optionsJeda[] = $belJedaSetting;
+                                                sort($optionsJeda);
+                                            }
+                                            foreach ($optionsJeda as $detik) {
+                                                $sel = ($detik == $belJedaSetting) ? 'selected' : '';
+                                                echo "<option value=\"$detik\" $sel>{$detik}d</option>";
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notifikasi Selesai di Dalam Panel -->
+                        <div id="finishNoticeBox" class="alert alert-success mt-2 mb-0 text-center py-2 px-2" style="display: none; border-radius: 8px; font-size: 0.75rem;">
+                            <strong class="d-block text-success mb-1"><i class="fas fa-check-circle me-1"></i>Lomba Selesai!</strong>
+                            <span class="text-muted">Seluruh soal telah dibacakan.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -847,6 +967,8 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
 
             const finishBox = document.getElementById('finishNoticeBox');
             if (finishBox) finishBox.style.display = 'none';
+            const finishBoxMain = document.getElementById('finishNoticeBoxMain');
+            if (finishBoxMain) finishBoxMain.style.display = 'none';
         }
 
         // 2. BEL 1X: Menegur Kesalahan Peserta (+ Jeda Waktu Otomatis)
@@ -873,6 +995,10 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
         function startCountdown() {
             cancelCountdown();
 
+            if (isBelCollapsed && window.innerWidth >= 992) {
+                toggleBelCollapse(false);
+            }
+
             const selectEl = document.getElementById('selectJeda');
             countdownTotal = parseInt(selectEl.value) || 8;
             countdownRemaining = countdownTotal;
@@ -892,6 +1018,23 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
             countdownTimerId = setInterval(() => {
                 const elapsed = Date.now() - startTime;
                 const remainingMs = Math.max(0, durationMs - elapsed);
+                countdownRemaining = Math.ceil(remainingMs / 1000);
+
+                timerText.innerText = (countdownRemaining < 10 ? '0' : '') + countdownRemaining + 's';
+                const percent = (remainingMs / durationMs) * 100;
+                bar.style.width = percent + '%';
+
+                if (countdownRemaining <= 3) {
+                    bar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-danger';
+                }
+
+                if (remainingMs <= 0) {
+                    clearInterval(countdownTimerId);
+                    countdownTimerId = null;
+                    onCountdownTimeout();
+                }
+            }, 100);
+        }
                 countdownRemaining = Math.ceil(remainingMs / 1000);
 
                 timerText.innerText = (countdownRemaining < 10 ? '0' : '') + countdownRemaining + 's';
@@ -985,9 +1128,78 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
             showStatus("Bel 4x: Lomba Berakhir! Peserta menghentikan jawaban terakhir.", "danger");
 
             const finishBox = document.getElementById('finishNoticeBox');
-            if (finishBox) {
-                finishBox.style.display = 'block';
-                finishBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (finishBox) finishBox.style.display = 'block';
+
+            const finishBoxMain = document.getElementById('finishNoticeBoxMain');
+            if (finishBoxMain) {
+                finishBoxMain.style.display = 'block';
+                finishBoxMain.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // =========================================================
+        // TOGGLE COLLAPSE / MINIMIZE PANEL MELAYANG
+        // =========================================================
+        let isBelCollapsed = false;
+
+        function toggleBelCollapse(forceState = null) {
+            const panel = document.getElementById('floatingBelPanel');
+            const soalArea = document.querySelector('.soal-content-area');
+            const header = document.querySelector('.header');
+            const pesertaBox = document.querySelector('.peserta-aktif-box');
+            const headerTitle = document.getElementById('floatingBelTitle');
+            const headerTes = document.getElementById('btnTesSuaraHeader');
+            const bodyEl = document.getElementById('floatingBelBody');
+            const miniEl = document.getElementById('floatingBelMini');
+            const iconToggle = document.getElementById('iconToggleCollapse');
+
+            if (forceState !== null) {
+                isBelCollapsed = forceState;
+            } else {
+                isBelCollapsed = !isBelCollapsed;
+            }
+
+            if (window.innerWidth < 992) {
+                // Tampilan Mobile
+                if (bodyEl) {
+                    if (isBelCollapsed) {
+                        bodyEl.style.display = 'none';
+                        if (iconToggle) iconToggle.className = 'fas fa-chevron-up';
+                    } else {
+                        bodyEl.style.display = 'block';
+                        if (iconToggle) iconToggle.className = 'fas fa-chevron-down';
+                    }
+                }
+                return;
+            }
+
+            // Tampilan Desktop
+            if (isBelCollapsed) {
+                if (panel) panel.classList.add('collapsed');
+                if (soalArea) soalArea.classList.add('panel-collapsed');
+                if (header) header.classList.add('panel-collapsed');
+                if (pesertaBox) pesertaBox.classList.add('panel-collapsed');
+                if (bodyEl) bodyEl.classList.add('d-none');
+                if (miniEl) {
+                    miniEl.classList.remove('d-none');
+                    miniEl.classList.add('d-flex');
+                }
+                if (headerTitle) headerTitle.classList.add('d-none');
+                if (headerTes) headerTes.classList.add('d-none');
+                if (iconToggle) iconToggle.className = 'fas fa-chevron-left';
+            } else {
+                if (panel) panel.classList.remove('collapsed');
+                if (soalArea) soalArea.classList.remove('panel-collapsed');
+                if (header) header.classList.remove('panel-collapsed');
+                if (pesertaBox) pesertaBox.classList.remove('panel-collapsed');
+                if (bodyEl) bodyEl.classList.remove('d-none');
+                if (miniEl) {
+                    miniEl.classList.add('d-none');
+                    miniEl.classList.remove('d-flex');
+                }
+                if (headerTitle) headerTitle.classList.remove('d-none');
+                if (headerTes) headerTes.classList.remove('d-none');
+                if (iconToggle) iconToggle.className = 'fas fa-chevron-right';
             }
         }
 
