@@ -90,7 +90,17 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
             border-radius: 20px;
             box-shadow: 0 14px 28px rgba(0,0,0,0.08);
             margin: 20px auto;
-            padding: 30px;
+            padding: 25px 30px;
+            max-width: 1600px;
+        }
+        
+        @media (min-width: 992px) {
+            .sticky-bel {
+                position: -webkit-sticky;
+                position: sticky;
+                top: 20px;
+                z-index: 10;
+            }
         }
         
         .header {
@@ -254,7 +264,7 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container-fluid px-2 px-md-4">
         <div class="container-main">
             <!-- Logout Button -->
             <?php if ($jenis_soal !== 'penyisihan'): ?>
@@ -305,7 +315,11 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
             </div>
             <?php endif; ?>
 
-            <!-- =============================================================== -->
+            <!-- Row Pembagian Layar: Soal di Kiri, Bel di Kanan -->
+            <div class="row g-4 align-items-start">
+                <!-- Kolom Kiri: Tampilan Soal -->
+                <div class="col-lg-7 col-xl-8">
+                    <!-- =============================================================== -->
             <!-- TAMPILAN SOAL JUZ 30 -->
             <!-- =============================================================== -->
             <div class="soal-display">
@@ -424,8 +438,18 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
                     </div>
                 <?php endif; ?>
             </div>
-            
-<!-- =============================================================== -->
+                    
+                    <div class="controls text-start mb-4">
+                    <a href="#" onclick="kembaliDanClear(); return false;" class="btn btn-custom ms-0">
+                        <i class="fas fa-arrow-left me-2"></i>Kembali ke Pilih Soal
+                    </a>
+                </div>
+                </div>
+
+                <!-- Kolom Kanan: Kontrol Bel Musabaqoh -->
+                <div class="col-lg-5 col-xl-4">
+                    <div class="sticky-bel">
+                        <!-- =============================================================== -->
             <!-- PANEL KONTROL BEL MUSABAQOH (PROTOKOL RESMI MHQ) -->
             <!-- =============================================================== -->
             <div class="card bel-panel-card mb-4">
@@ -436,7 +460,7 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-light text-dark d-none d-md-inline-block">
-                            <i class="fas fa-keyboard me-1 text-primary"></i>Shortcut Keyboard: [1] [2] [3] [4] [Spasi]
+                            <i class="fas fa-keyboard me-1 text-primary"></i>Shortcut: [1] [2] [3] [4] [Spasi]
                         </span>
                         <button type="button" class="btn btn-sm btn-outline-light" onclick="testSound()" title="Uji Suara Bel">
                             <i class="fas fa-volume-up me-1"></i>Uji Suara
@@ -492,7 +516,7 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
                     <!-- 4 Tombol Protokol Bel -->
                     <div class="row g-2 text-center">
                         <!-- 1. Bel 2x: Mulai Lomba -->
-                        <div class="col-6 col-md-3">
+                        <div class="col-6">
                             <button type="button" class="btn btn-bel btn-bel-start w-100 p-3 h-100" id="btnBel2" onclick="triggerBel2()">
                                 <div class="mb-1"><i class="fas fa-play-circle fa-2x"></i></div>
                                 <div class="fw-bold fs-5">Bel 2x</div>
@@ -502,7 +526,7 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
                         </div>
 
                         <!-- 2. Bel 1x: Teguran Kesalahan -->
-                        <div class="col-6 col-md-3">
+                        <div class="col-6">
                             <button type="button" class="btn btn-bel btn-bel-warning w-100 p-3 h-100" id="btnBel1" onclick="triggerBel1()">
                                 <div class="mb-1"><i class="fas fa-exclamation-triangle fa-2x"></i></div>
                                 <div class="fw-bold fs-5">Bel 1x</div>
@@ -512,7 +536,7 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
                         </div>
 
                         <!-- 3. Bel 3x: Pindah Soal -->
-                        <div class="col-6 col-md-3">
+                        <div class="col-6">
                             <button type="button" class="btn btn-bel btn-bel-next w-100 p-3 h-100" id="btnBel3" onclick="triggerBel3()">
                                 <div class="mb-1"><i class="fas fa-step-forward fa-2x"></i></div>
                                 <div class="fw-bold fs-5">Bel 3x</div>
@@ -522,7 +546,7 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
                         </div>
 
                         <!-- 4. Bel 4x: Lomba Berakhir -->
-                        <div class="col-6 col-md-3">
+                        <div class="col-6">
                             <button type="button" class="btn btn-bel btn-bel-finish w-100 p-3 h-100" id="btnBel4" onclick="triggerBel4()">
                                 <div class="mb-1"><i class="fas fa-flag-checkered fa-2x"></i></div>
                                 <div class="fw-bold fs-5">Bel 4x</div>
@@ -564,12 +588,8 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
                     </div>
                 </div>
             </div>
-
-            <!-- Controls -->
-            <div class="controls">
-                <a href="#" onclick="kembaliDanClear(); return false;" class="btn btn-custom">
-                    <i class="fas fa-arrow-left me-2"></i>Kembali ke Pilih Soal
-                </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
