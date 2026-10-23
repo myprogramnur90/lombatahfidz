@@ -853,7 +853,12 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
         // Bunyikan bel N kali berurutan
         let isRinging = false;
         async function ringBellSequence(count, interval = 580) {
-            getAudioContext();
+            const ctx = getAudioContext();
+            if (ctx && ctx.state === 'suspended') {
+                try {
+                    await ctx.resume();
+                } catch(e) {}
+            }
             isRinging = true;
 
             const indicator = document.getElementById('ringIndicator');
@@ -1018,23 +1023,6 @@ if (empty($belBunyiSetting)) $belBunyiSetting = 'kuningan';
             countdownTimerId = setInterval(() => {
                 const elapsed = Date.now() - startTime;
                 const remainingMs = Math.max(0, durationMs - elapsed);
-                countdownRemaining = Math.ceil(remainingMs / 1000);
-
-                timerText.innerText = (countdownRemaining < 10 ? '0' : '') + countdownRemaining + 's';
-                const percent = (remainingMs / durationMs) * 100;
-                bar.style.width = percent + '%';
-
-                if (countdownRemaining <= 3) {
-                    bar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-danger';
-                }
-
-                if (remainingMs <= 0) {
-                    clearInterval(countdownTimerId);
-                    countdownTimerId = null;
-                    onCountdownTimeout();
-                }
-            }, 100);
-        }
                 countdownRemaining = Math.ceil(remainingMs / 1000);
 
                 timerText.innerText = (countdownRemaining < 10 ? '0' : '') + countdownRemaining + 's';
